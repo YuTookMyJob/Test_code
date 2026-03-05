@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shift Desk</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1117;--sf:#161b22;--sf2:#21262d;--sf3:#2d333b;
+  --bd:#30363d;--bd2:#444c56;
+  --tx:#cdd9e5;--txd:#768390;--txm:#545d68;
+  --ac:#539bf5;--ac2:#4a8de0;
+  --grn:#3fb950;--amb:#daaa3f;
+  --red:#e5534b;--redl:#ff7b72; --red-bg:rgba(229,83,75,.13);
+  --yel:#e3b341;--yel-bg:rgba(227,179,65,.12);
+  --org:#cc6b2c;--orgl:#ffa657;--org-bg:rgba(204,107,44,.12);
+  --pur:#986ee2;--purl:#dcbdfb;--pur-bg:rgba(152,110,226,.13);
+  --sm:#986ee2;--sm-bg:rgba(152,110,226,.18);
+  --ss:#539bf5;--ss-bg:rgba(83,155,245,.18);
+  --sp:#cc6b2c;--sp-bg:rgba(204,107,44,.18);
+}
+body{background:var(--bg);color:var(--tx);font-family:-apple-system,'Segoe UI',sans-serif;font-size:13px;line-height:1.5;min-height:100vh}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:3px}
+
+/* ── NAV ── */
+.nav{position:sticky;top:0;z-index:200;background:var(--sf);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 20px;gap:4px}
+.nav-logo{display:flex;align-items:center;gap:9px;padding:12px 0;margin-right:16px;flex-shrink:0}
+.nav-logo .ic{width:28px;height:28px;background:linear-gradient(135deg,var(--ac),var(--pur));border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.nav-logo .nm{font-size:14px;font-weight:800;letter-spacing:.05em;font-family:'Courier New',monospace}
+.nav-logo .nm em{color:var(--ac);font-style:normal}
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;color:var(--txd);cursor:pointer;font-size:13px;font-weight:500;padding:14px 15px 12px;transition:.15s;white-space:nowrap}
+.tab-btn:hover{color:var(--tx)}
+.tab-btn.active{color:var(--ac);border-bottom-color:var(--ac)}
+
+/* ── LAYOUT ── */
+.page{padding:20px 22px;display:none;max-width:1600px}
+.page.active{display:block}
+
+/* ── FORMS ── */
+input,select{background:var(--sf2);border:1px solid var(--bd);border-radius:5px;color:var(--tx);font-size:12px;font-family:inherit;outline:none;padding:5px 8px;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus{border-color:var(--ac);box-shadow:0 0 0 3px rgba(83,155,245,.1)}
+input[type=time]{width:86px;font-family:'Courier New',monospace;font-size:12px}
+input[type=number]{width:64px}
+select{padding:5px 20px 5px 8px}
+input::placeholder{color:var(--txm)}
+
+/* ── BUTTONS ── */
+.btn{border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;padding:7px 14px;display:inline-flex;align-items:center;gap:5px;transition:.15s;white-space:nowrap}
+.btn-pri{background:var(--ac);color:#fff}.btn-pri:hover{background:var(--ac2)}
+.btn-sm{background:var(--sf2);border:1px solid var(--bd);color:var(--tx)}.btn-sm:hover{background:var(--sf3)}
+.btn-red{background:rgba(229,83,75,.15);border:1px solid rgba(229,83,75,.3);color:var(--redl)}.btn-red:hover{background:rgba(229,83,75,.25)}
+
+/* ── CARDS ── */
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:16px 18px;margin-bottom:16px}
+.card-title{font-size:10px;font-weight:700;color:var(--txm);text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card-title::after{content:'';flex:1;height:1px;background:var(--bd)}
+.row-g{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end}
+.fld{display:flex;flex-direction:column;gap:4px}
+.fld-lbl{font-size:10px;font-weight:700;color:var(--txm);text-transform:uppercase;letter-spacing:.07em}
+.fld-row{display:flex;align-items:center;gap:6px}
+.fld-row span{color:var(--txm);font-size:11px}
+
+/* ── SETUP TABLE ── */
+.setup-tbl{width:100%;border-collapse:collapse}
+.setup-tbl th{background:var(--sf2);color:var(--txd);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:9px 12px;text-align:left;border-bottom:1px solid var(--bd);white-space:nowrap}
+.setup-tbl th:first-child{border-radius:6px 0 0 0;width:32px}
+.setup-tbl th:last-child{border-radius:0 6px 0 0}
+.setup-tbl td{padding:5px 8px;border-bottom:1px solid rgba(48,54,61,.6);vertical-align:middle}
+.setup-tbl tr:last-child td{border-bottom:none}
+.setup-tbl tbody tr:hover td{background:rgba(255,255,255,.012)}
+.setup-tbl input,.setup-tbl select{width:100%}
+.row-num{display:inline-flex;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center;background:var(--sf2);border:1px solid var(--bd);font-size:10px;font-weight:700;color:var(--txm);font-family:'Courier New',monospace}
+.skill-dot{display:inline-block;width:8px;height:8px;border-radius:50%}
+
+/* ── BREAKS TAB ── */
+.breaks-tbl{width:100%;border-collapse:collapse;background:var(--sf);border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+.breaks-tbl th{background:var(--sf2);color:var(--txd);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:10px 14px;text-align:left;border-bottom:1px solid var(--bd)}
+.breaks-tbl td{padding:7px 10px;border-bottom:1px solid rgba(48,54,61,.5);vertical-align:middle}
+.breaks-tbl tr:last-child td{border-bottom:none}
+.drag-row{transition:background .1s}
+.drag-row.drag-over{background:rgba(83,155,245,.07)!important;outline:1px dashed var(--ac)}
+.drag-row.dragging{opacity:.35;outline:2px solid var(--pur)!important}
+.drag-handle{cursor:grab;color:var(--txm);font-size:14px;padding:0 6px 0 2px;user-select:none;flex-shrink:0}
+.drag-handle:active{cursor:grabbing}
+.tc{display:inline-flex;align-items:center;background:var(--sf2);border:1px solid var(--bd);border-radius:5px;font-family:'Courier New',monospace;font-size:12px;font-weight:700;padding:3px 9px;min-width:68px;justify-content:center}
+.tc.am{color:var(--amb)}
+.tc.pm{color:var(--grn)}
+.tc input[type=time]{background:transparent;border:none;box-shadow:none;color:inherit;font-family:inherit;font-size:inherit;font-weight:inherit;padding:0;width:56px}
+.sc{display:inline-block;border-radius:4px;font-size:10px;font-weight:700;padding:2px 7px;text-transform:uppercase;letter-spacing:.04em}
+.sc.multi{background:var(--sm-bg);color:var(--purl)}
+.sc.single{background:var(--ss-bg);color:#88c2ff}
+.sc.partial{background:var(--sp-bg);color:var(--orgl)}
+
+/* ── LUNCHES TAB ── */
+.lunch-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.legend{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-left:auto}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--txd)}
+.leg-sw{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.lunch-scroll{overflow-x:auto;padding-bottom:6px}
+.lunch-grid{display:flex;gap:8px;min-width:max-content}
+.lunch-col{width:152px;flex-shrink:0}
+.lunch-hdr{text-align:center;font-family:'Courier New',monospace;font-size:13px;font-weight:700;padding:8px 4px 7px;border-radius:8px 8px 0 0;border:1px solid var(--bd);border-bottom:none;background:var(--sf2);color:var(--txd);transition:.2s}
+.lunch-hdr.cf-red{background:var(--red-bg);border-color:rgba(229,83,75,.4);color:var(--redl)}
+.lunch-hdr.cf-yel{background:var(--yel-bg);border-color:rgba(227,179,65,.4);color:var(--yel)}
+.lunch-hdr.cf-org{background:var(--org-bg);border-color:rgba(204,107,44,.4);color:var(--orgl)}
+.lunch-cell{min-height:50px;background:var(--sf);border:1px solid var(--bd);margin-top:-1px;display:flex;align-items:center;justify-content:center;padding:3px;transition:.15s;position:relative}
+.lunch-cell:last-child{border-radius:0 0 8px 8px}
+.lunch-cell.drop-active{border-color:var(--ac)!important;background:rgba(83,155,245,.08)!important}
+.lunch-cell.cf-red-bg{background:rgba(229,83,75,.06)}
+.lunch-cell.cf-yel-bg{background:rgba(227,179,65,.05)}
+.lunch-cell.cf-org-bg{background:rgba(204,107,44,.05)}
+.lpill{width:100%;min-height:44px;border-radius:5px;display:flex;flex-direction:column;justify-content:center;padding:4px 6px 4px 9px;cursor:grab;user-select:none;font-size:12px;font-weight:500;gap:1px;transition:opacity .15s}
+.lpill:active{cursor:grabbing}
+.lpill.dragging{opacity:.25;outline:2px dashed var(--pur);outline-offset:1px}
+.lpill.skill-multi{background:var(--sm-bg);color:var(--purl)}
+.lpill.skill-single{background:var(--ss-bg);color:#88c2ff}
+.lpill.skill-partial{background:var(--sp-bg);color:var(--orgl)}
+.lpill-top{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.lpill-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;font-weight:600}
+.lpill-dur{font-size:10px;font-family:'Courier New',monospace;opacity:.7;font-weight:600}
+.lpill-rm{background:none;border:none;color:currentColor;cursor:pointer;opacity:.35;font-size:15px;line-height:1;padding:0;transition:opacity .15s;flex-shrink:0}
+.lpill-rm:hover{opacity:1}
+.lunch-add{background:none;border:1px dashed rgba(83,155,245,.25);border-radius:5px;color:var(--txm);cursor:pointer;font-size:11px;width:calc(100% - 4px);min-height:44px;padding:0 6px;appearance:none;text-align:center;transition:.15s}
+.lunch-add:hover{background:var(--sf2);border-color:var(--ac);color:var(--tx)}
+.lunch-add:focus{outline:none}
+.warn-bar{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.warn-tag{display:inline-flex;align-items:center;gap:5px;border-radius:5px;font-size:11px;font-weight:500;padding:5px 10px}
+.warn-tag.err{background:var(--red-bg);border:1px solid rgba(229,83,75,.3);color:var(--redl)}
+.warn-tag.wrn{background:var(--yel-bg);border:1px solid rgba(227,179,65,.3);color:var(--yel)}
+.warn-tag.inf{background:var(--org-bg);border:1px solid rgba(204,107,44,.3);color:var(--orgl)}
+
+/* ── GANTT ── */
+.gantt-legend{display:flex;gap:14px;flex-wrap:wrap;padding:10px 14px;background:var(--sf);border:1px solid var(--bd);border-radius:8px;margin-bottom:14px}
+.gantt-scroll{overflow-x:auto;padding-bottom:8px}
+.gantt-inner{min-width:900px}
+.g-axis-row{display:flex;align-items:flex-end;margin-bottom:3px}
+.g-agent-col{width:150px;flex-shrink:0}
+.g-track-area{flex:1;height:22px;position:relative;border-bottom:1px solid var(--bd)}
+.g-tick{position:absolute;display:flex;flex-direction:column;align-items:center;transform:translateX(-50%)}
+.g-tick-line{width:1px;height:5px;background:var(--bd)}
+.g-tick-lbl{font-family:'Courier New',monospace;font-size:10px;color:var(--txm);white-space:nowrap}
+.g-row{display:flex;align-items:center;margin-bottom:3px;height:38px}
+.g-row.drag-over-row{background:rgba(83,155,245,.05);border-radius:4px}
+.g-row.row-dragging{opacity:.3}
+.g-agent{width:150px;flex-shrink:0;display:flex;align-items:center;gap:6px;padding-right:10px;overflow:hidden;cursor:grab}
+.g-agent:active{cursor:grabbing}
+.g-agent.dragging{outline:2px solid var(--pur);border-radius:4px;opacity:.5}
+.g-agent-name{font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.g-track{flex:1;height:100%;position:relative;background:var(--sf);border:1px solid var(--bd);border-radius:5px;overflow:visible}
+.g-grid-line{position:absolute;top:0;bottom:0;width:1px;background:var(--bd);opacity:.3;pointer-events:none}
+.g-bar{position:absolute;top:5px;bottom:5px;border-radius:3px;cursor:grab;display:flex;align-items:center;overflow:hidden;min-width:8px;z-index:2;transition:filter .1s}
+.g-bar:hover{filter:brightness(1.15)}
+.g-bar:active{cursor:grabbing}
+.g-bar.work{opacity:.2;cursor:default;pointer-events:none;z-index:1}
+.g-bar.am-break{background:var(--amb);z-index:3}
+.g-bar.pm-break{background:var(--grn);z-index:3}
+.g-bar.lunch-bar{z-index:2}
+.g-bar.lunch-bar.cf-red{box-shadow:0 0 0 2px var(--redl);}
+.g-bar.lunch-bar.cf-yel{box-shadow:0 0 0 2px var(--yel);}
+.g-bar.lunch-bar.cf-org{box-shadow:0 0 0 2px var(--orgl);}
+.g-bar-lbl{font-size:10px;font-weight:600;color:rgba(255,255,255,.8);padding:0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;flex:1}
+.g-resize{position:absolute;right:0;top:0;bottom:0;width:7px;cursor:ew-resize;background:rgba(255,255,255,.12);border-radius:0 3px 3px 0;flex-shrink:0;z-index:4}
+.g-resize:hover{background:rgba(255,255,255,.35)}
+.g-no-lunch{border:1px dashed rgba(229,83,75,.35)!important}
+.g-tip{position:absolute;background:#1c2128;border:1px solid var(--bd2);border-radius:6px;color:var(--tx);font-size:11px;padding:5px 9px;pointer-events:none;z-index:999;white-space:nowrap;top:-32px;left:50%;transform:translateX(-50%);display:none}
+.g-bar:hover .g-tip{display:block}
+.empty-state{text-align:center;padding:60px 20px;color:var(--txm)}
+.empty-state .ei{font-size:36px;margin-bottom:10px;opacity:.3}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">
+    <div class="ic">⏱</div>
+    <span class="nm">SHIFT<em>.</em>DESK</span>
+  </div>
+  <button class="tab-btn active" onclick="switchTab('setup',this)">① Setup</button>
+  <button class="tab-btn" onclick="switchTab('breaks',this)">② Breaks</button>
+  <button class="tab-btn" onclick="switchTab('lunches',this)">③ Lunches</button>
+  <button class="tab-btn" onclick="switchTab('gantt',this)">④ Gantt</button>
+</nav>
+
+<div id="page-setup" class="page active">
+  <div class="card">
+    <div class="card-title">Global Settings</div>
+    <div class="row-g">
+      <div class="fld"><span class="fld-lbl">AM Break Start</span><input type="time" id="s-amStart" value="10:00" onchange="saveSettings()"></div>
+      <div class="fld"><span class="fld-lbl">AM Break End</span><input type="time" id="s-amEnd" value="11:10" onchange="saveSettings()"></div>
+      <div class="fld"><span class="fld-lbl">PM Break Start</span><input type="time" id="s-pmStart" value="15:00" onchange="saveSettings()"></div>
+      <div class="fld"><span class="fld-lbl">PM Break End</span><input type="time" id="s-pmEnd" value="16:10" onchange="saveSettings()"></div>
+      <div class="fld"><span class="fld-lbl">Lunch Starts</span><input type="time" id="s-lunchStart" value="11:30" onchange="saveSettings()"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Agent Configuration</div>
+    <div style="overflow-x:auto">
+      <table class="setup-tbl">
+        <thead><tr>
+          <th>#</th><th>Name</th><th>Skill</th>
+          <th>Shift Start</th><th>Shift End</th>
+          <th>Lunch Duration</th><th>Lunch Lockout</th>
+        </tr></thead>
+        <tbody id="setup-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="page-breaks" class="page">
+  <div class="row-g" style="margin-bottom:14px">
+    <button class="btn btn-pri" onclick="initBreaks();rdBreaks()">↻ Recalculate</button>
+    <span style="color:var(--txm);font-size:11px;align-self:center">Drag rows to reorder · Edit times directly · Dropdown to swap agents</span>
+  </div>
+  <table class="breaks-tbl" id="breaks-tbl">
+    <thead><tr>
+      <th style="width:28px"></th>
+      <th>Agent</th><th>Skill</th><th>AM Break</th><th>PM Break</th>
+    </tr></thead>
+    <tbody id="breaks-body"></tbody>
+  </table>
+</div>
+
+<div id="page-lunches" class="page">
+  <div class="lunch-toolbar">
+    <button class="btn btn-pri" onclick="autoAssign()">⚡ Auto-Assign</button>
+    <button class="btn btn-sm" onclick="clearLunches()">✕ Clear All</button>
+    <div class="legend">
+      <div class="leg"><div class="leg-sw" style="background:rgba(229,83,75,.55);border:1px solid var(--red)"></div>3+ multi-skill (red)</div>
+      <div class="leg"><div class="leg-sw" style="background:rgba(227,179,65,.55);border:1px solid var(--yel)"></div>3+ agents (yellow)</div>
+      <div class="leg"><div class="leg-sw" style="background:rgba(204,107,44,.55);border:1px solid var(--org)"></div>2+ with multi (orange)</div>
+      <div class="leg"><div class="leg-sw" style="background:var(--sm-bg);border:1px solid var(--sm)"></div>Multi</div>
+      <div class="leg"><div class="leg-sw" style="background:var(--ss-bg);border:1px solid var(--ss)"></div>Single</div>
+      <div class="leg"><div class="leg-sw" style="background:var(--sp-bg);border:1px solid var(--sp)"></div>Partial</div>
+    </div>
+  </div>
+  <div class="lunch-scroll"><div class="lunch-grid" id="lunch-grid"></div></div>
+  <div class="warn-bar" id="lunch-warns"></div>
+</div>
+
+<div id="page-gantt" class="page">
+  <div class="gantt-legend">
+    <div class="leg"><div class="leg-sw" style="background:var(--sm);opacity:.7"></div>Multi-skill</div>
+    <div class="leg"><div class="leg-sw" style="background:var(--ss);opacity:.7"></div>Single-skill</div>
+    <div class="leg"><div class="leg-sw" style="background:var(--sp);opacity:.7"></div>Partial Multi</div>
+    <div class="leg"><div class="leg-sw" style="background:var(--amb)"></div>AM Break</div>
+    <div class="leg"><div class="leg-sw" style="background:var(--grn)"></div>PM Break</div>
+    <div class="leg"><div class="leg-sw" style="background:var(--txd)"></div>Lunch</div>
+    <div class="leg"><div class="leg-sw" style="background:var(--redl)"></div>Conflict (red)</div>
+    <div class="leg"><div class="leg-sw" style="background:var(--yel)"></div>Conflict (yellow)</div>
+    <div class="leg" style="font-size:11px;color:var(--txm)">← drag bars to move · drag right edge to resize lunch</div>
+  </div>
+  <div class="gantt-scroll"><div class="gantt-inner" id="gantt-inner"></div></div>
+</div>
+
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+const S = {
+  agents: Array.from({length:12},(_,i)=>({
+    id:String(i),name:'',skill:'single',start:'09:00',end:'17:00',lunchDur:60,lockout:''
+  })),
+  settings:{amStart:'10:00',amEnd:'11:10',pmStart:'15:00',pmEnd:'16:10',lunchStart:'11:30'},
+  breakRows:[], // [{agentId,amMin,pmMin}]
+  lunches:Array.from({length:7},()=>[]), // slot index -> [agentId,...]
+  ganttOrder:[] // [agentId,...] for gantt row order
+};
+
+// ═══════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════
+const t2m=t=>{if(!t||!t.includes(':'))return 0;const[h,m]=t.split(':').map(Number);return h*60+m;};
+const m2t=m=>{m=Math.max(0,Math.min(m,1439));return`${String(Math.floor(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;};
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const active=()=>S.agents.filter(a=>a.name.trim());
+const getA=id=>S.agents.find(a=>a.id===id);
+const skColor=s=>s==='multi'?'var(--sm)':s==='partial'?'var(--sp)':'var(--ss)';
+const skClass=s=>s==='multi'?'multi':s==='partial'?'partial':'single';
+const skLabel=s=>s==='multi'?'Multi':s==='partial'?'Partial':'Single';
+const slotTime=i=>m2t(t2m(S.settings.lunchStart)+i*30);
+const SLOT_COUNT=7;
+
+// ═══════════════════════════════════════════════════
+// CONFLICT DETECTION
+// ═══════════════════════════════════════════════════
+function agentsOnLunchAt(minute){
+  const res=[];
+  S.lunches.forEach((agents,si)=>{
+    const ss=t2m(S.settings.lunchStart)+si*30;
+    agents.forEach(id=>{
+      if(!id)return;
+      const a=getA(id);if(!a||!a.name)return;
+      const dur=a.lunchDur||60;
+      if(minute>=ss&&minute<ss+dur)res.push(a);
+    });
+  });
+  return res;
+}
+
+function conflictLevel(agents){
+  const tot=agents.length,multi=agents.filter(a=>a.skill==='multi').length;
+  if(multi>=3)return'red';
+  if(tot>=3)return'yel';
+  if(tot>=2&&multi>=1)return'org';
+  return null;
+}
+
+function slotConflict(si){
+  const ss=t2m(S.settings.lunchStart)+si*30;
+  const agents=agentsOnLunchAt(ss);
+  return conflictLevel(agents);
+}
+
+function agentConflict(agentId){
+  let startMin=null;
+  S.lunches.forEach((agents,si)=>{
+    if(agents.includes(agentId))startMin=t2m(S.settings.lunchStart)+si*30;
+  });
+  if(startMin===null)return null;
+  return conflictLevel(agentsOnLunchAt(startMin));
+}
+
+function duplicates(){
+  const seen={},dups=new Set();
+  S.lunches.forEach(agents=>agents.forEach(id=>{if(!id)return;if(seen[id])dups.add(id);seen[id]=true;}));
+  return dups;
+}
+
+function missingFromLunch(){
+  const assigned=new Set(S.lunches.flat().filter(Boolean));
+  return active().filter(a=>!assigned.has(a.id));
+}
+
+// ═══════════════════════════════════════════════════
+// SETUP TAB
+// ═══════════════════════════════════════════════════
+function saveSettings(){
+  S.settings.amStart=document.getElementById('s-amStart').value;
+  S.settings.amEnd=document.getElementById('s-amEnd').value;
+  S.settings.pmStart=document.getElementById('s-pmStart').value;
+  S.settings.pmEnd=document.getElementById('s-pmEnd').value;
+  S.settings.lunchStart=document.getElementById('s-lunchStart').value;
+}
+
+function rdSetup(){
+  const lockoutOptions=Array.from({length:SLOT_COUNT},(_,i)=>`<option value="${i}"${''}>  ${slotTime(i)}</option>`).join('');
+  document.getElementById('setup-body').innerHTML=S.agents.map((a,i)=>`
+    <tr>
+      <td><span class="row-num">${i+1}</span></td>
+      <td><input type="text" value="${esc(a.name)}" placeholder="Agent name…"
+        oninput="S.agents[${i}].name=this.value;syncBreakRows();syncGanttOrder()"></td>
+      <td>
+        <select onchange="S.agents[${i}].skill=this.value">
+          <option value="single"${a.skill==='single'?' selected':''}>Single Skill</option>
+          <option value="multi"${a.skill==='multi'?' selected':''}>Multi Skill</option>
+          <option value="partial"${a.skill==='partial'?' selected':''}>Partial Multi</option>
+        </select>
+      </td>
+      <td><input type="time" value="${a.start}" onchange="S.agents[${i}].start=this.value"></td>
+      <td><input type="time" value="${a.end}"   onchange="S.agents[${i}].end=this.value"></td>
+      <td>
+        <div class="fld-row">
+          <input type="number" min="15" max="120" step="5" value="${a.lunchDur}"
+            onchange="S.agents[${i}].lunchDur=parseInt(this.value)||60">
+          <span style="color:var(--txm);font-size:11px">min</span>
+        </div>
+      </td>
+      <td>
+        <select onchange="S.agents[${i}].lockout=this.value">
+          <option value="">— None —</option>
+          ${lockoutOptions.replace(`value="${a.lockout}"`,`value="${a.lockout}" selected`)}
+        </select>
+      </td>
+    </tr>`).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// BREAKS TAB
+// ═══════════════════════════════════════════════════
+function syncBreakRows(){
+  const active_=active();
+  // Add missing
+  active_.forEach(a=>{
+    if(!S.breakRows.find(r=>r.agentId===a.id)){
+      const idx=S.breakRows.length;
+      S.breakRows.push({agentId:a.id,amMin:t2m(S.settings.amStart)+idx*10,pmMin:t2m(S.settings.pmStart)+idx*10});
+    }
+  });
+  // Remove gone
+  S.breakRows=S.breakRows.filter(r=>active_.some(a=>a.id===r.agentId));
+}
+
+function initBreaks(){
+  syncBreakRows();
+  S.breakRows.forEach((r,i)=>{
+    r.amMin=t2m(S.settings.amStart)+i*10;
+    r.pmMin=t2m(S.settings.pmStart)+i*10;
+  });
+}
+
+let bDragIdx=null;
+
+function rdBreaks(){
+  syncBreakRows();
+  const active_=active();
+  const tbody=document.getElementById('breaks-body');
+  if(!active_.length){
+    tbody.innerHTML=`<tr><td colspan="5"><div class="empty-state"><div class="ei">📋</div>Add agent names in Setup first.</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML=S.breakRows.map((r,i)=>{
+    const a=getA(r.agentId);if(!a)return'';
+    const sc=skClass(a.skill);
+    const agentOpts=active_.map(ag=>`<option value="${ag.id}"${ag.id===r.agentId?' selected':''}>${esc(ag.name)}</option>`).join('');
+    return`<tr class="drag-row" draggable="true"
+      ondragstart="bDragStart(event,${i})"
+      ondragover="bDragOver(event,${i})"
+      ondragleave="bDragLeave(event)"
+      ondrop="bDrop(event,${i})"
+      ondragend="bDragEnd(event)">
+      <td><span class="drag-handle" title="Drag to reorder">⠿</span></td>
+      <td>
+        <select style="min-width:130px" onchange="swapBreakAgent(${i},this.value)">${agentOpts}</select>
+      </td>
+      <td><span class="sc ${sc}">${skLabel(a.skill)}</span></td>
+      <td><span class="tc am">
+        <input type="time" value="${m2t(r.amMin)}" onchange="S.breakRows[${i}].amMin=t2m(this.value);rdGantt&&rdGantt()">
+      </span></td>
+      <td><span class="tc pm">
+        <input type="time" value="${m2t(r.pmMin)}" onchange="S.breakRows[${i}].pmMin=t2m(this.value);rdGantt&&rdGantt()">
+      </span></td>
+    </tr>`;
+  }).join('');
+}
+
+function swapBreakAgent(rowIdx,newAgentId){
+  const oldId=S.breakRows[rowIdx].agentId;
+  const swapRow=S.breakRows.find(r=>r.agentId===newAgentId);
+  if(swapRow){swapRow.agentId=oldId;}
+  S.breakRows[rowIdx].agentId=newAgentId;
+  rdBreaks();
+}
+
+function bDragStart(e,i){bDragIdx=i;e.currentTarget.classList.add('dragging');e.dataTransfer.effectAllowed='move';}
+function bDragOver(e,i){e.preventDefault();e.currentTarget.classList.add('drag-over');}
+function bDragLeave(e){e.currentTarget.classList.remove('drag-over');}
+function bDragEnd(e){e.currentTarget.classList.remove('dragging');bDragIdx=null;document.querySelectorAll('.drag-row').forEach(r=>r.classList.remove('drag-over'));}
+function bDrop(e,i){
+  e.preventDefault();
+  if(bDragIdx===null||bDragIdx===i)return;
+  const[removed]=S.breakRows.splice(bDragIdx,1);
+  S.breakRows.splice(i,0,removed);
+  bDragIdx=null;rdBreaks();
+}
+
+// ═══════════════════════════════════════════════════
+// LUNCHES TAB
+// ═══════════════════════════════════════════════════
+function clearLunches(){S.lunches=Array.from({length:SLOT_COUNT},()=>[]);rdLunches();}
+
+function autoAssign(){
+  S.lunches=Array.from({length:SLOT_COUNT},()=>[]);
+  const ags=active();const n=ags.length;
+  const locked=ags.filter(a=>a.lockout!=='');
+  const unlocked=ags.filter(a=>a.lockout==='');
+
+  // Place locked first
+  locked.forEach(a=>{
+    const si=parseInt(a.lockout);
+    if(isNaN(si)||si<0||si>=SLOT_COUNT)return;
+    const max=(si===0&&n<=8)?1:2;
+    if(S.lunches[si].length<max)S.lunches[si].push(a.id);
+  });
+
+  // Sort unlocked: multi first to spread them
+  const sorted=[...unlocked].sort((a,b)=>a.skill==='multi'&&b.skill!=='multi'?-1:b.skill==='multi'&&a.skill!=='multi'?1:0);
+
+  sorted.forEach(a=>{
+    let placed=false;
+    for(let si=0;si<SLOT_COUNT;si++){
+      const max=(si===0&&n<=8)?1:2;
+      if(S.lunches[si].length<max){
+        S.lunches[si].push(a.id);placed=true;break;
+      }
+    }
+    if(!placed){
+      // Try again with full capacity
+      for(let si=0;si<SLOT_COUNT;si++){
+        if(S.lunches[si].length<2){S.lunches[si].push(a.id);break;}
+      }
+    }
+  });
+  rdLunches();
+}
+
+let lDrag=null;
+
+function rdLunches(){
+  const grid=document.getElementById('lunch-grid');
+  const active_=active();
+  if(!active_.length){
+    grid.innerHTML=`<div class="empty-state"><div class="ei">🍽</div>Add agent names in Setup first.</div>`;
+    document.getElementById('lunch-warns').innerHTML='';
+    return;
+  }
+
+  grid.innerHTML='';
+  for(let si=0;si<SLOT_COUNT;si++){
+    const cf=slotConflict(si);
+    const col=document.createElement('div');col.className='lunch-col';
+    let hc='lunch-hdr';
+    if(cf==='red')hc+=' cf-red';else if(cf==='yel')hc+=' cf-yel';else if(cf==='org')hc+=' cf-org';
+    col.innerHTML=`<div class="${hc}">${slotTime(si)}</div>`;
+
+    for(let row=0;row<2;row++){
+      const cell=document.createElement('div');cell.className='lunch-cell';
+      if(cf==='red')cell.classList.add('cf-red-bg');
+      else if(cf==='yel')cell.classList.add('cf-yel-bg');
+      else if(cf==='org')cell.classList.add('cf-org-bg');
+
+      cell.addEventListener('dragover',e=>{e.preventDefault();cell.classList.add('drop-active');});
+      cell.addEventListener('dragleave',()=>cell.classList.remove('drop-active'));
+      cell.addEventListener('drop',e=>{
+        e.preventDefault();cell.classList.remove('drop-active');
+        if(!lDrag)return;
+        const{agentId,fromSi}=lDrag;
+        const n=active_.length;
+        const max=(si===0&&n<=8)?1:2;
+        // Remove from source
+        const sIdx=S.lunches[fromSi].indexOf(agentId);
+        if(sIdx!==-1)S.lunches[fromSi].splice(sIdx,1);
+        // Add to target or swap
+        if(S.lunches[si].length<max){
+          S.lunches[si].push(agentId);
+        } else if(S.lunches[si].length>0){
+          const displaced=S.lunches[si].pop();
+          S.lunches[si].push(agentId);
+          if(S.lunches[fromSi].length<2)S.lunches[fromSi].push(displaced);
+        }
+        lDrag=null;rdLunches();
+      });
+
+      const agentId=S.lunches[si][row];
+      if(agentId){
+        const a=getA(agentId);
+        if(a&&a.name){
+          const pill=document.createElement('div');
+          pill.className=`lpill skill-${a.skill}`;
+          pill.draggable=true;
+          const nonDef=a.lunchDur!==60;
+          const cfA=agentConflict(agentId);
+          let cfBorder='';
+          if(cfA==='red')cfBorder='outline:1px solid var(--redl);';
+          else if(cfA==='yel')cfBorder='outline:1px solid var(--yel);';
+          else if(cfA==='org')cfBorder='outline:1px solid var(--orgl);';
+          pill.style.cssText=cfBorder;
+          pill.innerHTML=`
+            <div class="lpill-top">
+              <span class="lpill-name">${esc(a.name)}</span>
+              <button class="lpill-rm" onclick="removeLunch(${si},${row});event.stopPropagation()">×</button>
+            </div>
+            ${nonDef?`<span class="lpill-dur">${a.lunchDur} min</span>`:''}`;
+          pill.addEventListener('dragstart',()=>{lDrag={agentId,fromSi:si};setTimeout(()=>pill.classList.add('dragging'),0);});
+          pill.addEventListener('dragend',()=>{pill.classList.remove('dragging');lDrag=null;});
+          cell.appendChild(pill);
+        }
+      } else if(row===0||S.lunches[si].length>0){
+        // Show add dropdown
+        const sel=document.createElement('select');sel.className='lunch-add';
+        sel.innerHTML=`<option value="">＋ assign</option>`+
+          active_.filter(a=>!S.lunches.flat().includes(a.id)).map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');
+        sel.addEventListener('change',()=>{if(sel.value){addToSlot(si,sel.value);sel.value='';}});
+        cell.appendChild(sel);
+      }
+      col.appendChild(cell);
+    }
+    grid.appendChild(col);
+  }
+
+  // Warnings
+  const warns=[];
+  const dups=duplicates();
+  const miss=missingFromLunch();
+  if(dups.size>0)warns.push({t:'err',msg:`⚠ Duplicate agents: ${[...dups].map(id=>esc(getA(id)?.name||'?')).join(', ')}`});
+  if(miss.length>0)warns.push({t:'wrn',msg:`⚠ Missing from lunch: ${miss.map(a=>esc(a.name)).join(', ')}`});
+  // Check for any conflict-level warns
+  for(let si=0;si<SLOT_COUNT;si++){
+    const cf=slotConflict(si);
+    if(cf==='red')warns.push({t:'err',msg:`🔴 ${slotTime(si)}: 3+ multi-skill agents on lunch`});
+    else if(cf==='yel')warns.push({t:'wrn',msg:`🟡 ${slotTime(si)}: 3+ agents on lunch simultaneously`});
+    else if(cf==='org')warns.push({t:'inf',msg:`🟠 ${slotTime(si)}: 2+ agents including multi-skill`});
+  }
+  document.getElementById('lunch-warns').innerHTML=warns.map(w=>`<div class="warn-tag ${w.t}">${w.msg}</div>`).join('');
+}
+
+function removeLunch(si,row){
+  S.lunches[si].splice(row,1);rdLunches();
+}
+function addToSlot(si,agentId){
+  // Remove from any existing slot
+  S.lunches.forEach(agents=>{const i=agents.indexOf(agentId);if(i!==-1)agents.splice(i,1);});
+  if(S.lunches[si].length<2)S.lunches[si].push(agentId);
+  rdLunches();
+}
+
+// ═══════════════════════════════════════════════════
+// GANTT TAB
+// ═══════════════════════════════════════════════════
+function syncGanttOrder(){
+  const active_=active();
+  // Add new agents to end
+  active_.forEach(a=>{if(!S.ganttOrder.includes(a.id))S.ganttOrder.push(a.id);});
+  // Remove gone
+  S.ganttOrder=S.ganttOrder.filter(id=>active_.some(a=>a.id===id));
+}
+
+function ganttRange(){
+  const active_=active();
+  if(!active_.length)return{min:480,max:1080};
+  const starts=active_.map(a=>t2m(a.start));
+  const ends=active_.map(a=>t2m(a.end));
+  return{min:Math.min(...starts,480),max:Math.max(...ends,1080)};
+}
+
+// Gantt drag state
+let gDrag=null;
+
+function pctOf(min,range){return((min-range.min)/(range.max-range.min)*100).toFixed(4)+'%';}
+function wPct(dur,range){return(dur/(range.max-range.min)*100).toFixed(4)+'%';}
+
+let gRowDragId=null;
+
+function rdGantt(){
+  syncGanttOrder();
+  const el=document.getElementById('gantt-inner');
+  const active_=active();
+  if(!active_.length){
+    el.innerHTML=`<div class="empty-state"><div class="ei">📊</div>Add agents in Setup first.</div>`;
+    return;
+  }
+  const range=ganttRange();
+  const ticks=[];
+  for(let m=Math.ceil(range.min/60)*60;m<=range.max;m+=60)ticks.push(m);
+
+  let html=`<div class="g-axis-row">
+    <div class="g-agent-col"></div>
+    <div class="g-track-area">
+      ${ticks.map(m=>`<div class="g-tick" style="left:${pctOf(m,range)}">
+        <div class="g-tick-line"></div>
+        <div class="g-tick-lbl">${m2t(m)}</div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+
+  S.ganttOrder.forEach(agentId=>{
+    const a=getA(agentId);if(!a||!a.name)return;
+    const sc=skColor(a.skill);
+    // Find breaks
+    const br=S.breakRows.find(r=>r.agentId===agentId);
+    // Find lunch
+    let lunchSi=-1;
+    S.lunches.forEach((agents,si)=>{if(agents.includes(agentId))lunchSi=si;});
+    const cfA=agentConflict(agentId);
+    let cfClass='';
+    if(cfA==='red')cfClass='cf-red';else if(cfA==='yel')cfClass='cf-yel';else if(cfA==='org')cfClass='cf-org';
+    const hasLunch=lunchSi>=0;
+    const trackCls=hasLunch?'g-track':'g-track g-no-lunch';
+
+    // Bars
+    const bars=[];
+    // Work bar
+    bars.push(`<div class="g-bar work" style="left:${pctOf(t2m(a.start),range)};width:${wPct(t2m(a.end)-t2m(a.start),range)};background:${sc}" data-tip="Shift ${a.start}–${a.end}"></div>`);
+    // Grid lines
+    const gridLines=ticks.map(m=>`<div class="g-grid-line" style="left:${pctOf(m,range)}"></div>`).join('');
+
+    if(br){
+      bars.push(`<div class="g-bar am-break" style="left:${pctOf(br.amMin,range)};width:${wPct(10,range)}"
+        data-agent="${agentId}" data-type="am"
+        onmousedown="barMD(event,'${agentId}','am',${br.amMin},10)">
+        <div class="g-tip">AM Break ${m2t(br.amMin)}</div>
+      </div>`);
+      bars.push(`<div class="g-bar pm-break" style="left:${pctOf(br.pmMin,range)};width:${wPct(10,range)}"
+        data-agent="${agentId}" data-type="pm"
+        onmousedown="barMD(event,'${agentId}','pm',${br.pmMin},10)">
+        <div class="g-tip">PM Break ${m2t(br.pmMin)}</div>
+      </div>`);
+    }
+    if(hasLunch){
+      const lStart=t2m(S.settings.lunchStart)+lunchSi*30;
+      const dur=a.lunchDur||60;
+      bars.push(`<div class="g-bar lunch-bar ${cfClass}" style="left:${pctOf(lStart,range)};width:${wPct(dur,range)};background:${sc}"
+        data-agent="${agentId}" data-type="lunch"
+        onmousedown="barMD(event,'${agentId}','lunch',${lStart},${dur})">
+        <span class="g-bar-lbl">${esc(a.name)}</span>
+        <div class="g-resize" onmousedown="resMD(event,'${agentId}',${dur})"></div>
+        <div class="g-tip">Lunch ${m2t(lStart)} (${dur}min)${cfA?' ⚠':''}</div>
+      </div>`);
+    }
+
+    html+=`<div class="g-row" id="grow-${agentId}"
+      ondragover="gRowOver(event,'${agentId}')"
+      ondrop="gRowDrop(event,'${agentId}')"
+      ondragleave="gRowLeave(event)">
+      <div class="g-agent" draggable="true"
+        ondragstart="gRowDS(event,'${agentId}')"
+        ondragend="gRowDE(event)">
+        <div class="skill-dot" style="background:${sc};width:8px;height:8px;border-radius:50%;flex-shrink:0"></div>
+        <span class="g-agent-name" title="${esc(a.name)}">${esc(a.name)}</span>
+      </div>
+      <div class="${trackCls}" id="gtrack-${agentId}">
+        ${gridLines}${bars.join('')}
+      </div>
+    </div>`;
+  });
+
+  el.innerHTML=html;
+}
+
+// ── Gantt row drag ──
+function gRowDS(e,id){gRowDragId=id;setTimeout(()=>{const el=document.getElementById('grow-'+id);if(el)el.classList.add('row-dragging');},0);e.dataTransfer.effectAllowed='move';}
+function gRowDE(e){document.querySelectorAll('.g-row').forEach(r=>r.classList.remove('drag-over-row','row-dragging'));gRowDragId=null;}
+function gRowOver(e,id){e.preventDefault();if(gRowDragId&&gRowDragId!==id){document.querySelectorAll('.g-row').forEach(r=>r.classList.remove('drag-over-row'));const el=document.getElementById('grow-'+id);if(el)el.classList.add('drag-over-row');}}
+function gRowLeave(e){e.currentTarget.classList.remove('drag-over-row');}
+function gRowDrop(e,targetId){
+  e.preventDefault();
+  if(!gRowDragId||gRowDragId===targetId)return;
+  const fi=S.ganttOrder.indexOf(gRowDragId),ti=S.ganttOrder.indexOf(targetId);
+  if(fi===-1||ti===-1)return;
+  S.ganttOrder.splice(fi,1);S.ganttOrder.splice(ti,0,gRowDragId);
+  gRowDragId=null;rdGantt();
+}
+
+// ── Bar drag/resize with mouse ──
+function barMD(e,agentId,type,startMin,dur){
+  if(e.target.classList.contains('g-resize'))return;
+  e.preventDefault();e.stopPropagation();
+  const track=document.getElementById('gtrack-'+agentId);
+  const rect=track.getBoundingClientRect();
+  const range=ganttRange();
+  const totalMin=range.max-range.min;
+  const pxPerMin=rect.width/totalMin;
+  gDrag={mode:'move',agentId,type,startX:e.clientX,startMin,dur,pxPerMin,range};
+  document.addEventListener('mousemove',onBarDrag);
+  document.addEventListener('mouseup',onBarUp);
+}
+
+function resMD(e,agentId,dur){
+  e.preventDefault();e.stopPropagation();
+  const track=document.getElementById('gtrack-'+agentId);
+  const rect=track.getBoundingClientRect();
+  const range=ganttRange();
+  const pxPerMin=rect.width/(range.max-range.min);
+  gDrag={mode:'resize',agentId,startX:e.clientX,dur,pxPerMin,range};
+  document.addEventListener('mousemove',onBarDrag);
+  document.addEventListener('mouseup',onBarUp);
+}
+
+function onBarDrag(e){
+  if(!gDrag)return;
+  const dx=e.clientX-gDrag.startX;
+  const dMin=Math.round(dx/gDrag.pxPerMin/5)*5;
+  if(gDrag.mode==='move'){
+    const newMin=Math.max(gDrag.range.min,Math.min(gDrag.range.max-gDrag.dur,gDrag.startMin+dMin));
+    const bar=document.querySelector(`[data-agent="${gDrag.agentId}"][data-type="${gDrag.type}"]`);
+    if(bar)bar.style.left=pctOf(newMin,gDrag.range);
+  } else {
+    const newDur=Math.max(15,gDrag.dur+dMin);
+    const bar=document.querySelector(`[data-agent="${gDrag.agentId}"][data-type="lunch"]`);
+    if(bar)bar.style.width=wPct(newDur,gDrag.range);
+  }
+}
+
+function onBarUp(e){
+  if(!gDrag)return;
+  const dx=e.clientX-gDrag.startX;
+  const dMin=Math.round(dx/gDrag.pxPerMin/5)*5;
+
+  if(gDrag.mode==='move'){
+    const newMin=Math.max(gDrag.range.min,Math.min(gDrag.range.max-gDrag.dur,gDrag.startMin+dMin));
+    if(gDrag.type==='am'){
+      const row=S.breakRows.find(r=>r.agentId===gDrag.agentId);
+      if(row)row.amMin=newMin;
+    } else if(gDrag.type==='pm'){
+      const row=S.breakRows.find(r=>r.agentId===gDrag.agentId);
+      if(row)row.pmMin=newMin;
+    } else if(gDrag.type==='lunch'){
+      // Move to nearest slot
+      const lunchBase=t2m(S.settings.lunchStart);
+      const slotIdx=Math.round((newMin-lunchBase)/30);
+      const clamped=Math.max(0,Math.min(SLOT_COUNT-1,slotIdx));
+      S.lunches.forEach(agents=>{const i=agents.indexOf(gDrag.agentId);if(i!==-1)agents.splice(i,1);});
+      if(S.lunches[clamped].length<2)S.lunches[clamped].push(gDrag.agentId);
+    }
+  } else if(gDrag.mode==='resize'){
+    const newDur=Math.max(15,gDrag.dur+dMin);
+    const a=getA(gDrag.agentId);
+    if(a)a.lunchDur=newDur;
+    rdSetup(); // sync to setup
+  }
+
+  gDrag=null;
+  document.removeEventListener('mousemove',onBarDrag);
+  document.removeEventListener('mouseup',onBarUp);
+  rdGantt();
+  rdLunches();
+  if(document.getElementById('page-breaks').classList.contains('active'))rdBreaks();
+}
+
+// ═══════════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════════
+function switchTab(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='setup')rdSetup();
+  if(name==='breaks'){syncBreakRows();rdBreaks();}
+  if(name==='lunches')rdLunches();
+  if(name==='gantt'){syncGanttOrder();rdGantt();}
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+rdSetup();
+</script>
+</body>
+</html>
