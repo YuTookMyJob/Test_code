@@ -1,0 +1,214 @@
+<!DOCTYPE html><html>
+<head>
+<meta charset="UTF-8">
+<title>Offline Workforce Planner</title>
+<style>
+body{font-family:Arial;margin:0}
+nav{display:flex;background:#222}
+nav button{flex:1;padding:12px;color:white;background:#222;border:none;cursor:pointer}
+nav button.active{background:#555}
+.tab{display:none;padding:12px}
+.tab.active{display:block}
+input,select{margin:2px}
+table{border-collapse:collapse;width:100%}
+th,td{border:1px solid #ccc;padding:4px;text-align:center}
+.dragging{outline:3px dashed red}
+.multi{background:#cce5ff}
+.single{background:#d4edda}
+.partial{background:#fff3cd}
+.conflict{background:#ffb3b3}
+</style>
+</head>
+<body><nav>
+<button onclick="openTab('agents',this)" class="active">Agents</button>
+<button onclick="openTab('breaks',this)">Breaks</button>
+<button onclick="openTab('lunches',this)">Lunches</button>
+<button onclick="openTab('gantt',this)">Gantt</button>
+</nav><div id="agents" class="tab active">
+<h3>Agents</h3>
+Break Window <input id="breakStart" type="time" value="10:00"> to <input id="breakEnd" type="time" value="11:10">
+<br>
+Lunch Window <input id="lunchStart" type="time" value="11:30"> to <input id="lunchEnd" type="time" value="15:00">
+<br>
+Lunch Duration <input id="lunchDuration" value="60"> minutes<table id="agentTable">
+<thead>
+<tr>
+<th>Name</th>
+<th>Skill</th>
+<th>Shift Start</th>
+<th>Shift End</th>
+<th>Lunch Lock</th>
+<th>Break Override</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div><div id="breaks" class="tab">
+<h3>Breaks</h3>
+<table>
+<thead>
+<tr><th>Agent</th><th>Morning Break</th><th>Afternoon Break</th></tr>
+</thead>
+<tbody id="breakTable"></tbody>
+</table>
+</div><div id="lunches" class="tab">
+<h3>Lunches</h3>
+<button onclick="autoAssignLunch()">Auto Assign</button>
+<div id="lunchWarnings"></div>
+<table>
+<thead>
+<tr><th>Slot</th><th>Agent A</th><th>Agent B</th></tr>
+</thead>
+<tbody id="lunchTable"></tbody>
+</table>
+</div><div id="gantt" class="tab">
+<h3>Gantt</h3>
+<table>
+<thead><tr><th>Agent</th><th>Timeline</th></tr></thead>
+<tbody id="ganttTable"></tbody>
+</table>
+</div><script>
+const lunchSlots=["11:30","12:00","12:30","13:00","13:30","14:00","14:30"]
+
+function openTab(id,btn){
+ document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'))
+ document.getElementById(id).classList.add('active')
+ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'))
+ btn.classList.add('active')
+ if(id==='breaks') renderBreaks()
+ if(id==='lunches') renderLunchTable()
+ if(id==='gantt') renderGantt()
+}
+
+function initAgents(){
+ const tbody=document.querySelector('#agentTable tbody')
+ for(let i=0;i<12;i++){
+ const tr=document.createElement('tr')
+ tr.innerHTML=`
+ <td><input class='name'></td>
+ <td>
+ <select class='skill'>
+ <option value='multi'>Multi Skill</option>
+ <option value='single'>Single Skill</option>
+ <option value='partial'>Partial Multi</option>
+ </select>
+ </td>
+ <td><input type='time' value='09:00' class='start'></td>
+ <td><input type='time' value='17:00' class='end'></td>
+ <td>
+ <select class='lock'>
+ <option value=''>None</option>
+ ${lunchSlots.map(l=>`<option>${l}</option>`).join('')}
+ </select>
+ </td>
+ <td><input type='time' class='breakOverride'></td>
+ `
+ tbody.appendChild(tr)
+ }
+}
+
+function getAgents(){
+ const rows=[...document.querySelectorAll('#agentTable tbody tr')]
+ return rows.map(r=>({
+ name:r.querySelector('.name').value,
+ skill:r.querySelector('.skill').value,
+ start:r.querySelector('.start').value,
+ end:r.querySelector('.end').value,
+ lock:r.querySelector('.lock').value,
+ breakOverride:r.querySelector('.breakOverride').value
+ })).filter(a=>a.name)
+}
+
+function renderBreaks(){
+ const tbody=document.getElementById('breakTable')
+ tbody.innerHTML=''
+ getAgents().forEach(a=>{
+ const tr=document.createElement('tr')
+ const morning=a.breakOverride||document.getElementById('breakStart').value
+ const afternoon='15:30'
+ tr.innerHTML=`<td>${a.name}</td><td>${morning}</td><td>${afternoon}</td>`
+ tbody.appendChild(tr)
+ })
+}
+
+let lunchAssignments={}
+
+function autoAssignLunch(){
+ lunchAssignments={}
+ const agents=getAgents()
+ agents.forEach(a=>{
+ if(a.lock){
+ if(!lunchAssignments[a.lock]) lunchAssignments[a.lock]=[]
+ lunchAssignments[a.lock].push(a)
+ }
+ })
+ const free=agents.filter(a=>!a.lock)
+ let idx=0
+ free.forEach(a=>{
+ const slot=lunchSlots[idx%lunchSlots.length]
+ if(!lunchAssignments[slot]) lunchAssignments[slot]=[]
+ lunchAssignments[slot].push(a)
+ idx++
+ })
+ renderLunchTable()
+ checkLunchIssues()
+}
+
+function renderLunchTable(){
+ const tbody=document.getElementById('lunchTable')
+ tbody.innerHTML=''
+ lunchSlots.forEach(s=>{
+ const tr=document.createElement('tr')
+ const list=lunchAssignments[s]||[]
+ tr.innerHTML=`<td>${s}</td><td draggable='true'>${list[0]?.name||''}</td><td draggable='true'>${list[1]?.name||''}</td>`
+ tbody.appendChild(tr)
+ })
+ enableDrag()
+}
+
+function checkLunchIssues(){
+ const warn=[]
+ const agents=getAgents()
+ const allAssigned=Object.values(lunchAssignments).flat()
+
+ const names=allAssigned.map(a=>a.name)
+ const duplicates=names.filter((n,i)=>names.indexOf(n)!==i)
+ if(duplicates.length) warn.push('Duplicate agents on lunches')
+
+ agents.forEach(a=>{
+ if(!names.includes(a.name)) warn.push(a.name+' missing from lunches')
+ })
+
+ lunchSlots.forEach(s=>{
+ const list=lunchAssignments[s]||[]
+ if(list.length>=2) warn.push('2+ agents at '+s)
+ const multi=list.filter(a=>a.skill==='multi')
+ if(multi.length>=3) warn.push('3+ multi skill at '+s)
+ })
+
+ document.getElementById('lunchWarnings').innerHTML=warn.join('<br>')
+}
+
+function enableDrag(){
+ const tds=document.querySelectorAll('#lunchTable td[draggable]')
+ tds.forEach(td=>{
+ td.addEventListener('dragstart',()=>td.classList.add('dragging'))
+ td.addEventListener('dragend',()=>td.classList.remove('dragging'))
+ })
+}
+
+function renderGantt(){
+ const tbody=document.getElementById('ganttTable')
+ tbody.innerHTML=''
+ const agents=getAgents()
+ agents.forEach(a=>{
+ const tr=document.createElement('tr')
+ const skillClass=a.skill
+ tr.innerHTML=`<td>${a.name}</td><td class='${skillClass}'>Shift ${a.start}-${a.end}</td>`
+ tbody.appendChild(tr)
+ })
+}
+
+initAgents()
+</script></body>
+</html>
