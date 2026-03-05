@@ -99,31 +99,32 @@ input::placeholder{color:var(--txm)}
 .legend{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-left:auto}
 .leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--txd)}
 .leg-sw{width:10px;height:10px;border-radius:3px;flex-shrink:0}
-.lunch-scroll{overflow-x:auto;padding-bottom:6px}
-.lunch-grid{display:flex;gap:8px;min-width:max-content}
-.lunch-col{width:152px;flex-shrink:0}
-.lunch-hdr{text-align:center;font-family:'Courier New',monospace;font-size:13px;font-weight:700;padding:8px 4px 7px;border-radius:8px 8px 0 0;border:1px solid var(--bd);border-bottom:none;background:var(--sf2);color:var(--txd);transition:.2s}
-.lunch-hdr.cf-red{background:var(--red-bg);border-color:rgba(229,83,75,.4);color:var(--redl)}
-.lunch-hdr.cf-yel{background:var(--yel-bg);border-color:rgba(227,179,65,.4);color:var(--yel)}
-.lunch-hdr.cf-org{background:var(--org-bg);border-color:rgba(204,107,44,.4);color:var(--orgl)}
-.lunch-cell{min-height:50px;background:var(--sf);border:1px solid var(--bd);margin-top:-1px;display:flex;align-items:center;justify-content:center;padding:3px;transition:.15s;position:relative}
-.lunch-cell:last-child{border-radius:0 0 8px 8px}
-.lunch-cell.drop-active{border-color:var(--ac)!important;background:rgba(83,155,245,.08)!important}
-.lunch-cell.cf-red-bg{background:rgba(229,83,75,.06)}
-.lunch-cell.cf-yel-bg{background:rgba(227,179,65,.05)}
-.lunch-cell.cf-org-bg{background:rgba(204,107,44,.05)}
-.lpill{width:100%;min-height:44px;border-radius:5px;display:flex;flex-direction:column;justify-content:center;padding:4px 6px 4px 9px;cursor:grab;user-select:none;font-size:12px;font-weight:500;gap:1px;transition:opacity .15s}
+/* lunch table */
+.lunch-tbl{width:100%;border-collapse:collapse;background:var(--sf);border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+.lunch-tbl th{background:var(--sf2);color:var(--txd);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;padding:10px 16px;text-align:left;border-bottom:1px solid var(--bd)}
+.lunch-tbl td{padding:6px 10px;border-bottom:1px solid rgba(48,54,61,.5);vertical-align:middle;min-width:180px}
+.lunch-tbl td:first-child{width:90px;font-family:'Courier New',monospace;font-size:13px;font-weight:700;color:var(--txd);white-space:nowrap}
+.lunch-tbl tr:last-child td{border-bottom:none}
+.lunch-tbl tr.cf-red-row td:first-child{color:var(--redl)}
+.lunch-tbl tr.cf-yel-row td:first-child{color:var(--yel)}
+.lunch-tbl tr.cf-org-row td:first-child{color:var(--orgl)}
+.lunch-tbl tr.cf-red-row{background:rgba(229,83,75,.04)}
+.lunch-tbl tr.cf-yel-row{background:rgba(227,179,65,.04)}
+.lunch-tbl tr.cf-org-row{background:rgba(204,107,44,.04)}
+.lunch-cell-td{position:relative}
+.lunch-cell-td.drop-active{background:rgba(83,155,245,.1)!important;outline:1px dashed var(--ac)}
+.lpill{display:inline-flex;align-items:center;gap:6px;border-radius:5px;padding:5px 8px 5px 11px;cursor:grab;user-select:none;font-size:12px;font-weight:600;min-width:130px;max-width:100%;position:relative;transition:opacity .15s}
 .lpill:active{cursor:grabbing}
-.lpill.dragging{opacity:.25;outline:2px dashed var(--pur);outline-offset:1px}
+.lpill.dragging{opacity:.25;outline:2px dashed var(--pur);outline-offset:2px}
 .lpill.skill-multi{background:var(--sm-bg);color:var(--purl)}
 .lpill.skill-single{background:var(--ss-bg);color:#88c2ff}
 .lpill.skill-partial{background:var(--sp-bg);color:var(--orgl)}
-.lpill-top{display:flex;align-items:center;justify-content:space-between;gap:4px}
-.lpill-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;font-weight:600}
-.lpill-dur{font-size:10px;font-family:'Courier New',monospace;opacity:.7;font-weight:600}
-.lpill-rm{background:none;border:none;color:currentColor;cursor:pointer;opacity:.35;font-size:15px;line-height:1;padding:0;transition:opacity .15s;flex-shrink:0}
+.lpill-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lpill-dur{font-size:10px;font-family:'Courier New',monospace;opacity:.65;font-weight:700;flex-shrink:0}
+.lpill-rm{background:none;border:none;color:currentColor;cursor:pointer;opacity:.3;font-size:15px;line-height:1;padding:0 0 0 2px;transition:opacity .15s;flex-shrink:0}
 .lpill-rm:hover{opacity:1}
-.lunch-add{background:none;border:1px dashed rgba(83,155,245,.25);border-radius:5px;color:var(--txm);cursor:pointer;font-size:11px;width:calc(100% - 4px);min-height:44px;padding:0 6px;appearance:none;text-align:center;transition:.15s}
+.lunch-empty-cell{display:block;width:100%;min-width:130px}
+.lunch-add{background:none;border:1px dashed rgba(83,155,245,.22);border-radius:5px;color:var(--txm);cursor:pointer;font-size:11px;width:100%;padding:6px 8px;appearance:none;transition:.15s}
 .lunch-add:hover{background:var(--sf2);border-color:var(--ac);color:var(--tx)}
 .lunch-add:focus{outline:none}
 .warn-bar{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
@@ -131,6 +132,23 @@ input::placeholder{color:var(--txm)}
 .warn-tag.err{background:var(--red-bg);border:1px solid rgba(229,83,75,.3);color:var(--redl)}
 .warn-tag.wrn{background:var(--yel-bg);border:1px solid rgba(227,179,65,.3);color:var(--yel)}
 .warn-tag.inf{background:var(--org-bg);border:1px solid rgba(204,107,44,.3);color:var(--orgl)}
+/* ── CONFLICT PANEL ── */
+.cf-panel{margin-top:20px;background:var(--sf);border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+.cf-panel-hdr{background:var(--sf2);padding:10px 16px;font-size:10px;font-weight:700;color:var(--txm);text-transform:uppercase;letter-spacing:.1em;display:flex;align-items:center;gap:8px}
+.cf-panel-hdr::after{content:'';flex:1;height:1px;background:var(--bd)}
+.cf-panel-body{padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.cf-item{display:flex;align-items:flex-start;gap:12px;padding:9px 12px;border-radius:7px;font-size:12px;line-height:1.5}
+.cf-item.cf-red-item{background:rgba(229,83,75,.08);border:1px solid rgba(229,83,75,.2)}
+.cf-item.cf-yel-item{background:rgba(227,179,65,.07);border:1px solid rgba(227,179,65,.2)}
+.cf-item.cf-org-item{background:rgba(204,107,44,.07);border:1px solid rgba(204,107,44,.2)}
+.cf-item.cf-miss-item{background:rgba(83,155,245,.06);border:1px solid rgba(83,155,245,.18)}
+.cf-item.cf-dup-item{background:rgba(152,110,226,.07);border:1px solid rgba(152,110,226,.2)}
+.cf-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.cf-body{flex:1}
+.cf-title{font-weight:700;margin-bottom:2px}
+.cf-detail{color:var(--txd);font-size:11px}
+.cf-none{color:var(--txm);font-size:12px;padding:8px 0;display:flex;align-items:center;gap:8px}
+.cf-none::before{content:'✓';color:var(--grn);font-weight:700}
 
 /* ── GANTT ── */
 .gantt-legend{display:flex;gap:14px;flex-wrap:wrap;padding:10px 14px;background:var(--sf);border:1px solid var(--bd);border-radius:8px;margin-bottom:14px}
@@ -237,7 +255,7 @@ input::placeholder{color:var(--txm)}
       <div class="leg"><div class="leg-sw" style="background:var(--sp-bg);border:1px solid var(--sp)"></div>Partial</div>
     </div>
   </div>
-  <div class="lunch-scroll"><div class="lunch-grid" id="lunch-grid"></div></div>
+  <div id="lunch-table-wrap"></div>
   <div class="warn-bar" id="lunch-warns"></div>
 </div>
 
@@ -254,6 +272,7 @@ input::placeholder{color:var(--txm)}
     <div class="leg" style="font-size:11px;color:var(--txm)">← drag bars to move · drag right edge to resize lunch</div>
   </div>
   <div class="gantt-scroll"><div class="gantt-inner" id="gantt-inner"></div></div>
+  <div id="gantt-conflicts"></div>
 </div>
 
 <script>
@@ -356,9 +375,9 @@ function rdSetup(){
         oninput="S.agents[${i}].name=this.value;syncBreakRows();syncGanttOrder()"></td>
       <td>
         <select onchange="S.agents[${i}].skill=this.value">
-          <option value="single"${a.skill==='single'?' selected':''}>Single Skill</option>
           <option value="multi"${a.skill==='multi'?' selected':''}>Multi Skill</option>
-          <option value="partial"${a.skill==='partial'?' selected':''}>Partial Multi</option>
+          <option value="single"${a.skill==='single'?' selected':''}>Single Skill</option>
+          <option value="partial"${a.skill==='partial'?' selected':''}>Partial Skill</option>
         </select>
       </td>
       <td><input type="time" value="${a.start}" onchange="S.agents[${i}].start=this.value"></td>
@@ -501,86 +520,71 @@ function autoAssign(){
 let lDrag=null;
 
 function rdLunches(){
-  const grid=document.getElementById('lunch-grid');
+  const wrap=document.getElementById('lunch-table-wrap');
   const active_=active();
   if(!active_.length){
-    grid.innerHTML=`<div class="empty-state"><div class="ei">🍽</div>Add agent names in Setup first.</div>`;
+    wrap.innerHTML=`<div class="empty-state"><div class="ei">🍽</div>Add agent names in Setup first.</div>`;
     document.getElementById('lunch-warns').innerHTML='';
     return;
   }
 
-  grid.innerHTML='';
+  // Build table
+  let html=`<table class="lunch-tbl"><thead><tr>
+    <th>Time</th><th>Agent 1</th><th>Agent 2</th>
+  </tr></thead><tbody>`;
+
   for(let si=0;si<SLOT_COUNT;si++){
     const cf=slotConflict(si);
-    const col=document.createElement('div');col.className='lunch-col';
-    let hc='lunch-hdr';
-    if(cf==='red')hc+=' cf-red';else if(cf==='yel')hc+=' cf-yel';else if(cf==='org')hc+=' cf-org';
-    col.innerHTML=`<div class="${hc}">${slotTime(si)}</div>`;
+    let rowCls='';
+    if(cf==='red')rowCls='cf-red-row';
+    else if(cf==='yel')rowCls='cf-yel-row';
+    else if(cf==='org')rowCls='cf-org-row';
 
-    for(let row=0;row<2;row++){
-      const cell=document.createElement('div');cell.className='lunch-cell';
-      if(cf==='red')cell.classList.add('cf-red-bg');
-      else if(cf==='yel')cell.classList.add('cf-yel-bg');
-      else if(cf==='org')cell.classList.add('cf-org-bg');
+    const timeLabel=slotTime(si);
+    html+=`<tr class="${rowCls}" id="lrow-${si}">
+      <td>${timeLabel}</td>`;
 
-      cell.addEventListener('dragover',e=>{e.preventDefault();cell.classList.add('drop-active');});
-      cell.addEventListener('dragleave',()=>cell.classList.remove('drop-active'));
-      cell.addEventListener('drop',e=>{
-        e.preventDefault();cell.classList.remove('drop-active');
-        if(!lDrag)return;
-        const{agentId,fromSi}=lDrag;
-        const n=active_.length;
-        const max=(si===0&&n<=8)?1:2;
-        // Remove from source
-        const sIdx=S.lunches[fromSi].indexOf(agentId);
-        if(sIdx!==-1)S.lunches[fromSi].splice(sIdx,1);
-        // Add to target or swap
-        if(S.lunches[si].length<max){
-          S.lunches[si].push(agentId);
-        } else if(S.lunches[si].length>0){
-          const displaced=S.lunches[si].pop();
-          S.lunches[si].push(agentId);
-          if(S.lunches[fromSi].length<2)S.lunches[fromSi].push(displaced);
-        }
-        lDrag=null;rdLunches();
-      });
+    for(let col=0;col<2;col++){
+      const agentId=S.lunches[si][col];
+      html+=`<td class="lunch-cell-td" id="lcd-${si}-${col}"
+        ondragover="lCellOver(event,${si},${col})"
+        ondragleave="lCellLeave(event,${si},${col})"
+        ondrop="lCellDrop(event,${si},${col})">`;
 
-      const agentId=S.lunches[si][row];
       if(agentId){
         const a=getA(agentId);
         if(a&&a.name){
-          const pill=document.createElement('div');
-          pill.className=`lpill skill-${a.skill}`;
-          pill.draggable=true;
           const nonDef=a.lunchDur!==60;
           const cfA=agentConflict(agentId);
-          let cfBorder='';
-          if(cfA==='red')cfBorder='outline:1px solid var(--redl);';
-          else if(cfA==='yel')cfBorder='outline:1px solid var(--yel);';
-          else if(cfA==='org')cfBorder='outline:1px solid var(--orgl);';
-          pill.style.cssText=cfBorder;
-          pill.innerHTML=`
-            <div class="lpill-top">
-              <span class="lpill-name">${esc(a.name)}</span>
-              <button class="lpill-rm" onclick="removeLunch(${si},${row});event.stopPropagation()">×</button>
-            </div>
-            ${nonDef?`<span class="lpill-dur">${a.lunchDur} min</span>`:''}`;
-          pill.addEventListener('dragstart',()=>{lDrag={agentId,fromSi:si};setTimeout(()=>pill.classList.add('dragging'),0);});
-          pill.addEventListener('dragend',()=>{pill.classList.remove('dragging');lDrag=null;});
-          cell.appendChild(pill);
+          let border='';
+          if(cfA==='red')border='outline:1px solid var(--redl);';
+          else if(cfA==='yel')border='outline:1px solid var(--yel);';
+          else if(cfA==='org')border='outline:1px solid var(--orgl);';
+          html+=`<div class="lpill skill-${a.skill}" style="${border}" draggable="true"
+            id="lpill-${agentId}"
+            ondragstart="lPillDS(event,'${agentId}',${si})"
+            ondragend="lPillDE(event,'${agentId}')">
+            <span class="lpill-name">${esc(a.name)}</span>
+            ${nonDef?`<span class="lpill-dur">(${a.lunchDur} min)</span>`:''}
+            <button class="lpill-rm" onclick="removeLunch(${si},${col});event.stopPropagation()">×</button>
+          </div>`;
         }
-      } else if(row===0||S.lunches[si].length>0){
-        // Show add dropdown
-        const sel=document.createElement('select');sel.className='lunch-add';
-        sel.innerHTML=`<option value="">＋ assign</option>`+
-          active_.filter(a=>!S.lunches.flat().includes(a.id)).map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('');
-        sel.addEventListener('change',()=>{if(sel.value){addToSlot(si,sel.value);sel.value='';}});
-        cell.appendChild(sel);
+      } else {
+        // Show add dropdown only for col 0 always, col 1 only if col 0 filled or we want flexibility
+        const unassigned=active_.filter(a=>!S.lunches.flat().includes(a.id));
+        if(unassigned.length>0){
+          html+=`<select class="lunch-add" onchange="addToSlot(${si},this.value);this.value=''">
+            <option value="">＋ assign…</option>
+            ${unassigned.map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('')}
+          </select>`;
+        }
       }
-      col.appendChild(cell);
+      html+='</td>';
     }
-    grid.appendChild(col);
+    html+='</tr>';
   }
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
 
   // Warnings
   const warns=[];
@@ -588,7 +592,6 @@ function rdLunches(){
   const miss=missingFromLunch();
   if(dups.size>0)warns.push({t:'err',msg:`⚠ Duplicate agents: ${[...dups].map(id=>esc(getA(id)?.name||'?')).join(', ')}`});
   if(miss.length>0)warns.push({t:'wrn',msg:`⚠ Missing from lunch: ${miss.map(a=>esc(a.name)).join(', ')}`});
-  // Check for any conflict-level warns
   for(let si=0;si<SLOT_COUNT;si++){
     const cf=slotConflict(si);
     if(cf==='red')warns.push({t:'err',msg:`🔴 ${slotTime(si)}: 3+ multi-skill agents on lunch`});
@@ -596,6 +599,52 @@ function rdLunches(){
     else if(cf==='org')warns.push({t:'inf',msg:`🟠 ${slotTime(si)}: 2+ agents including multi-skill`});
   }
   document.getElementById('lunch-warns').innerHTML=warns.map(w=>`<div class="warn-tag ${w.t}">${w.msg}</div>`).join('');
+}
+
+function lPillDS(e,agentId,fromSi){
+  lDrag={agentId,fromSi};
+  setTimeout(()=>{const p=document.getElementById('lpill-'+agentId);if(p)p.classList.add('dragging');},0);
+  e.dataTransfer.effectAllowed='move';
+}
+function lPillDE(e,agentId){
+  const p=document.getElementById('lpill-'+agentId);if(p)p.classList.remove('dragging');
+  lDrag=null;
+}
+function lCellOver(e,si,col){
+  e.preventDefault();
+  const td=document.getElementById(`lcd-${si}-${col}`);
+  if(td)td.classList.add('drop-active');
+}
+function lCellLeave(e,si,col){
+  const td=document.getElementById(`lcd-${si}-${col}`);
+  if(td)td.classList.remove('drop-active');
+}
+function lCellDrop(e,si,col){
+  e.preventDefault();
+  const td=document.getElementById(`lcd-${si}-${col}`);
+  if(td)td.classList.remove('drop-active');
+  if(!lDrag)return;
+  const{agentId,fromSi}=lDrag;
+  const n=active().length;
+  const max=(si===0&&n<=8)?1:2;
+  // Get existing occupant
+  const existing=S.lunches[si][col];
+  // Remove agent from source
+  const sIdx=S.lunches[fromSi].indexOf(agentId);
+  if(sIdx!==-1)S.lunches[fromSi].splice(sIdx,1);
+  // If target cell occupied, swap
+  if(existing&&existing!==agentId){
+    if(S.lunches[fromSi].length<2)S.lunches[fromSi].push(existing);
+    const eIdx=S.lunches[si].indexOf(existing);
+    if(eIdx!==-1)S.lunches[si].splice(eIdx,1);
+  }
+  // Place in target
+  if(S.lunches[si].length<max){
+    S.lunches[si].splice(col,0,agentId);
+  } else {
+    S.lunches[si][col]=agentId;
+  }
+  lDrag=null;rdLunches();
 }
 
 function removeLunch(si,row){
@@ -719,6 +768,9 @@ function rdGantt(){
   });
 
   el.innerHTML=html;
+
+  // ── Conflict Panel ──
+  rdConflictPanel();
 }
 
 // ── Gantt row drag ──
@@ -809,6 +861,66 @@ function onBarUp(e){
   rdGantt();
   rdLunches();
   if(document.getElementById('page-breaks').classList.contains('active'))rdBreaks();
+}
+
+// ═══════════════════════════════════════════════════
+// GANTT CONFLICT PANEL
+// ═══════════════════════════════════════════════════
+function rdConflictPanel(){
+  const el=document.getElementById('gantt-conflicts');
+  const items=[];
+  const dups=duplicates();
+  const miss=missingFromLunch();
+  const active_=active();
+
+  // Per-slot conflicts
+  for(let si=0;si<SLOT_COUNT;si++){
+    const cf=slotConflict(si);
+    if(!cf)continue;
+    const ts=slotTime(si);
+    const agents=agentsOnLunchAt(t2m(S.settings.lunchStart)+si*30);
+    const names=agents.map(a=>a.name).join(', ');
+    if(cf==='red'){
+      const multiNames=agents.filter(a=>a.skill==='multi').map(a=>a.name).join(', ');
+      items.push({cls:'cf-red-item',icon:'🔴',title:`${ts} — 3+ Multi-Skill agents on lunch`,detail:`Multi-skill agents on lunch simultaneously: ${multiNames}. This reduces team capability significantly.`});
+    } else if(cf==='yel'){
+      items.push({cls:'cf-yel-item',icon:'🟡',title:`${ts} — 3+ agents on lunch at the same time`,detail:`Agents currently on lunch: ${names}. Consider spreading lunches to maintain coverage.`});
+    } else if(cf==='org'){
+      const multiNames=agents.filter(a=>a.skill==='multi').map(a=>a.name).join(', ');
+      items.push({cls:'cf-org-item',icon:'🟠',title:`${ts} — 2+ agents including multi-skill`,detail:`Multi-skill: ${multiNames}. Total on lunch: ${names}.`});
+    }
+  }
+
+  // Duplicates
+  if(dups.size>0){
+    const names=[...dups].map(id=>esc(getA(id)?.name||'?')).join(', ');
+    items.push({cls:'cf-dup-item',icon:'♊',title:`Duplicate agents in lunch schedule`,detail:`The following agents appear more than once: ${names}. Each agent should only appear in one slot.`});
+  }
+
+  // Missing
+  if(miss.length>0){
+    const names=miss.map(a=>esc(a.name)).join(', ');
+    items.push({cls:'cf-miss-item',icon:'❓',title:`Agents not assigned to a lunch slot`,detail:`Missing from schedule: ${names}. Use the Lunches tab to assign them.`});
+  }
+
+  if(!items.length){
+    el.innerHTML=`<div class="cf-panel"><div class="cf-panel-hdr">Conflicts &amp; Notices</div>
+      <div class="cf-panel-body"><div class="cf-none">No conflicts detected — schedule looks good.</div></div></div>`;
+    return;
+  }
+
+  el.innerHTML=`<div class="cf-panel">
+    <div class="cf-panel-hdr">Conflicts &amp; Notices <span style="color:var(--redl);font-size:11px;font-weight:600;margin-left:4px">${items.length} issue${items.length!==1?'s':''}</span></div>
+    <div class="cf-panel-body">
+      ${items.map(it=>`<div class="cf-item ${it.cls}">
+        <span class="cf-icon">${it.icon}</span>
+        <div class="cf-body">
+          <div class="cf-title">${it.title}</div>
+          <div class="cf-detail">${it.detail}</div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>`;
 }
 
 // ═══════════════════════════════════════════════════
