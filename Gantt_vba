@@ -1,0 +1,393 @@
+Option Explicit
+
+Public Const G_SLOTS As Integer = 42   ' 10:00-16:50 in 10-min steps
+Public Const G_COL   As Integer = 3    ' Gantt timeline starts at column C
+Public Const G_BASE  As Integer = 600  ' 10:00 = 600 mins from midnight
+Public Const MAX_AG  As Integer = 12
+
+' ============================================================
+' HELPERS
+' ============================================================
+Function SheetExists(nm As String) As Boolean
+    Dim ws As Object
+    On Error Resume Next
+    Set ws = ThisWorkbook.Sheets(nm)
+    SheetExists = Not ws Is Nothing
+    On Error GoTo 0
+End Function
+
+Function AgName(i As Integer) As String
+    AgName = Trim(CStr(ThisWorkbook.Sheets("Agents").Cells(i + 2, 2).Value))
+End Function
+
+Function AgSkill(i As Integer) As String
+    Dim v As String
+    v = Trim(CStr(ThisWorkbook.Sheets("Agents").Cells(i + 2, 3).Value))
+    If v = "" Then v = "Multi Skill"
+    AgSkill = v
+End Function
+
+Function AgDur(i As Integer) As Integer
+    Dim v As Integer
+    v = 60
+    On Error Resume Next
+    v = CInt(ThisWorkbook.Sheets("Agents").Cells(i + 2, 5).Value)
+    On Error GoTo 0
+    If v < 10 Then v = 60
+    AgDur = v
+End Function
+
+Function FindAg(nm As String) As Integer
+    Dim i As Integer
+    For i = 1 To MAX_AG
+        If AgName(i) = nm Then FindAg = i: Exit Function
+    Next i
+    FindAg = 0
+End Function
+
+Function ToTimeStr(mins As Integer) As String
+    ToTimeStr = Format(mins \ 60, "00") & ":" & Format(mins Mod 60, "00")
+End Function
+
+' ============================================================
+' BUILD LUNCH COUNTS (total agents & Multi Skill per 10-min slot)
+' ============================================================
+Sub BuildCounts(ByRef tot() As Integer, ByRef ms() As Integer)
+    Dim lm(5) As Integer
+    lm(0) = 690: lm(1) = 720: lm(2) = 750
+    lm(3) = 780: lm(4) = 810: lm(5) = 840
+    ReDim tot(0 To G_SLOTS - 1)
+    ReDim ms(0 To G_SLOTS - 1)
+    Dim wsL As Worksheet
+    Set wsL = ThisWorkbook.Sheets("Lunches")
+    Dim si As Integer, p As Integer
+    Dim nm As String, ai As Integer
+    Dim dur As Integer, st As Integer, s As Integer
+    For si = 0 To 5
+        For p = 2 To 3
+            nm = Trim(CStr(wsL.Cells(si + 3, p).Value))
+            If nm <> "" Then
+                ai = FindAg(nm)
+                If ai > 0 Then
+                    dur = AgDur(ai)
+                    st = (lm(si) - G_BASE) \ 10
+                    For s = st To st + dur \ 10 - 1
+                        If s >= 0 And s < G_SLOTS Then
+                            tot(s) = tot(s) + 1
+                            If AgSkill(ai) = "Multi Skill" Then ms(s) = ms(s) + 1
+                        End If
+                    Next s
+                End If
+            End If
+        Next p
+    Next si
+End Sub
+
+' ============================================================
+' BUILD GANTT SHEET STRUCTURE (headers, labels, legend)
+' ============================================================
+Sub BuildGanttSheet(ws As Worksheet)
+    Dim i As Integer, s As Integer, rw As Integer
+    Dim sm As Integer, sh As Integer, sn As Integer
+    Dim legClr As Variant, legTxt As Variant
+    Dim btn As Object
+
+    ws.Tab.Color = RGB(124, 58, 237)
+    ws.Cells(1, 1).Value = "GANTT  -  BREAK & LUNCH VISUALISATION"
+    ws.Cells(1, 1).Font.Bold = True
+    ws.Cells(1, 1).Font.Size = 14
+
+    ' Column headers
+    ws.Cells(2, 1).Value = "Agent"
+    ws.Cells(2, 2).Value = "Skill"
+    With ws.Range("A2:B2")
+        .Font.Bold = True
+        .Interior.Color = RGB(124, 58, 237)
+        .Font.Color = RGB(255, 255, 255)
+        .RowHeight = 50
+    End With
+
+    ' Time slot headers (rotated)
+    For s = 0 To G_SLOTS - 1
+        sm = G_BASE + s * 10: sh = sm \ 60: sn = sm Mod 60
+        With ws.Cells(2, G_COL + s)
+            .Value = TimeSerial(sh, sn, 0)
+            .NumberFormat = "hh:mm"
+            .Font.Size = 7: .Font.Bold = True
+            .Interior.Color = RGB(124, 58, 237)
+            .Font.Color = RGB(255, 255, 255)
+            .HorizontalAlignment = xlCenter
+            .Orientation = 90
+        End With
+        ws.Columns(G_COL + s).ColumnWidth = 2.2
+    Next s
+    ws.Rows(2).RowHeight = 50
+
+    ' Agent rows
+    For i = 1 To MAX_AG
+        rw = i + 2
+        ws.Cells(rw, 1).Formula = "=IF(Agents!B" & (i + 2) & "<>"""",Agents!B" & (i + 2) & ",""(empty " & i & ")"")"
+        ws.Cells(rw, 1).Font.Bold = True
+        ws.Cells(rw, 2).Formula = "=IF(Agents!B" & (i + 2) & "="""","""",Agents!C" & (i + 2) & ")"
+        ws.Cells(rw, 2).Font.Size = 8
+        ws.Cells(rw, 2).Font.Color = RGB(100, 116, 139)
+        If i Mod 2 = 0 Then
+            ws.Range(ws.Cells(rw, 1), ws.Cells(rw, G_COL + G_SLOTS - 1)).Interior.Color = RGB(248, 250, 252)
+        End If
+        ws.Rows(rw).RowHeight = 18
+    Next i
+
+    ws.Columns("A").ColumnWidth = 20
+    ws.Columns("B").ColumnWidth = 18
+
+    ' Freeze panes
+    ws.Activate
+    ws.Range("C3").Select
+    ActiveWindow.FreezePanes = True
+
+    ' Legend
+    ws.Rows(16).RowHeight = 8
+    ws.Cells(17, 1).Value = "LEGEND"
+    ws.Cells(17, 1).Font.Bold = True
+    legClr = Array(RGB(251, 146, 60), RGB(96, 165, 250), _
+                   RGB(74, 222, 128), RGB(147, 197, 253), RGB(253, 230, 138), _
+                   RGB(187, 247, 208), RGB(191, 219, 254), RGB(254, 243, 199), _
+                   RGB(254, 240, 138), RGB(252, 165, 165))
+    legTxt = Array("Morning Break (10 min)", "Afternoon Break (10 min)", _
+                   "Lunch - Multi Skill", "Lunch - Single Skill", "Lunch - Partial Multi Skill", _
+                   "Short Lunch (<=30 min) - Multi Skill", _
+                   "Short Lunch (<=30 min) - Single Skill", _
+                   "Short Lunch (<=30 min) - Partial Multi", _
+                   "3+ agents on lunch simultaneously", _
+                   "3+ Multi Skill on lunch simultaneously")
+    For i = 0 To 9
+        ws.Cells(18 + i, 1).Interior.Color = legClr(i)
+        ws.Cells(18 + i, 2).Value = legTxt(i)
+    Next i
+
+    ws.Cells(30, 1).Value = "CONFLICT SUMMARY"
+    ws.Cells(30, 1).Font.Bold = True
+    ws.Cells(31, 1).Value = "Click Refresh Gantt to populate."
+    ws.Cells(31, 1).Font.Italic = True
+    ws.Cells(31, 1).Font.Color = RGB(148, 163, 184)
+
+    ' Refresh button
+    Set btn = ws.Buttons.Add(10, 5, 130, 22)
+    btn.Caption = "Refresh Gantt"
+    btn.OnAction = "RefreshGantt"
+    btn.Font.Bold = True
+End Sub
+
+' ============================================================
+' REFRESH GANTT  — run this at any time
+' ============================================================
+Sub RefreshGantt()
+    If Not SheetExists("Agents") Then
+        MsgBox "Agents sheet not found. Please check the sheet name is exactly 'Agents'.", vbExclamation
+        Exit Sub
+    End If
+    If Not SheetExists("Lunches") Then
+        MsgBox "Lunches sheet not found. Please check the sheet name is exactly 'Lunches'.", vbExclamation
+        Exit Sub
+    End If
+
+    Application.ScreenUpdating = False
+
+    ' Build Gantt sheet if missing
+    Dim wsG As Worksheet
+    If Not SheetExists("Gantt") Then
+        Set wsG = ThisWorkbook.Sheets.Add(After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.Count))
+        wsG.Name = "Gantt"
+        Call BuildGanttSheet(wsG)
+    Else
+        Set wsG = ThisWorkbook.Sheets("Gantt")
+    End If
+
+    Dim wsL As Worksheet
+    Set wsL = ThisWorkbook.Sheets("Lunches")
+
+    Dim tot() As Integer, ms() As Integer
+    Call BuildCounts(tot, ms)
+
+    Dim lm(5) As Integer
+    lm(0) = 690: lm(1) = 720: lm(2) = 750
+    lm(3) = 780: lm(4) = 810: lm(5) = 840
+
+    Dim i As Integer, s As Integer, rw As Integer
+    Dim j As Integer, si As Integer, p As Integer
+    Dim nm As String, ai As Integer, dur As Integer, st As Integer
+    Dim actIdx As Integer, aftSlot As Integer, bg As Long
+    Dim sk As String, clrN As Long, clrS As Long
+    Dim actOrder(12) As Integer, actCnt As Integer
+    Dim confRow As Integer
+    Dim inCf As Boolean, csf As Integer
+    Dim assigned As String, missStr As String
+    Dim na As String, nb As String
+
+    ' Clear existing bar colours
+    For i = 1 To MAX_AG
+        rw = i + 2
+        For s = 0 To G_SLOTS - 1
+            If i Mod 2 = 0 Then
+                wsG.Cells(rw, G_COL + s).Interior.Color = RGB(248, 250, 252)
+            Else
+                wsG.Cells(rw, G_COL + s).Interior.ColorIndex = xlNone
+            End If
+        Next s
+    Next i
+
+    ' Build ordered list of active agents
+    actCnt = 0
+    For i = 1 To MAX_AG
+        If AgName(i) <> "" Then
+            actCnt = actCnt + 1
+            actOrder(actCnt) = i
+        End If
+    Next i
+
+    ' Draw bars
+    For i = 1 To MAX_AG
+        If AgName(i) = "" Then GoTo NextAgG
+        rw = i + 2
+        actIdx = -1
+        For j = 1 To actCnt
+            If actOrder(j) = i Then actIdx = j - 1: Exit For
+        Next j
+        If actIdx = -1 Then GoTo NextAgG
+
+        ' Skill colours (normal / short lunch)
+        sk = AgSkill(i)
+        Select Case sk
+            Case "Multi Skill":         clrN = RGB(74, 222, 128):  clrS = RGB(187, 247, 208)
+            Case "Single Skill":        clrN = RGB(147, 197, 253): clrS = RGB(191, 219, 254)
+            Case "Partial Multi Skill": clrN = RGB(253, 230, 138): clrS = RGB(254, 243, 199)
+            Case Else:                  clrN = RGB(74, 222, 128):  clrS = RGB(187, 247, 208)
+        End Select
+
+        ' Lunch bars (drawn first so breaks can override)
+        For si = 0 To 5
+            For p = 2 To 3
+                nm = Trim(CStr(wsL.Cells(si + 3, p).Value))
+                If nm = AgName(i) Then
+                    dur = AgDur(i)
+                    st = (lm(si) - G_BASE) \ 10
+                    For s = st To st + dur \ 10 - 1
+                        If s >= 0 And s < G_SLOTS Then
+                            If ms(s) >= 3 Then
+                                bg = RGB(252, 165, 165)
+                            ElseIf tot(s) >= 3 Then
+                                bg = RGB(254, 240, 138)
+                            ElseIf dur <= 30 Then
+                                bg = clrS
+                            Else
+                                bg = clrN
+                            End If
+                            wsG.Cells(rw, G_COL + s).Interior.Color = bg
+                        End If
+                    Next s
+                End If
+            Next p
+        Next si
+
+        ' Morning break (first 7 active agents only)
+        If actIdx < 7 Then
+            wsG.Cells(rw, G_COL + actIdx).Interior.Color = RGB(251, 146, 60)
+        End If
+
+        ' Afternoon break
+        aftSlot = 30 + actIdx
+        If aftSlot < G_SLOTS Then
+            wsG.Cells(rw, G_COL + aftSlot).Interior.Color = RGB(96, 165, 250)
+        End If
+NextAgG:
+    Next i
+
+    ' ── Conflict summary ─────────────────────────────────
+    wsG.Range("A31:B55").ClearContents
+    wsG.Range("A31:B55").Interior.ColorIndex = xlNone
+    wsG.Range("A31:B55").Font.Color = RGB(30, 41, 59)
+    confRow = 31
+
+    ' 3+ Multi Skill windows
+    inCf = False: csf = 0
+    For s = 0 To G_SLOTS - 1
+        If ms(s) >= 3 Then
+            If Not inCf Then csf = s: inCf = True
+        Else
+            If inCf Then
+                wsG.Cells(confRow, 1).Value = "RED - 3+ Multi Skill:"
+                wsG.Cells(confRow, 2).Value = ToTimeStr(G_BASE + csf * 10) & " to " & ToTimeStr(G_BASE + s * 10)
+                wsG.Cells(confRow, 1).Font.Color = RGB(185, 28, 28)
+                wsG.Cells(confRow, 2).Font.Color = RGB(185, 28, 28)
+                wsG.Cells(confRow, 1).Font.Bold = True
+                confRow = confRow + 1: inCf = False
+            End If
+        End If
+    Next s
+    If inCf Then
+        wsG.Cells(confRow, 1).Value = "RED - 3+ Multi Skill:"
+        wsG.Cells(confRow, 2).Value = ToTimeStr(G_BASE + csf * 10) & "+"
+        wsG.Cells(confRow, 1).Font.Color = RGB(185, 28, 28)
+        wsG.Cells(confRow, 1).Font.Bold = True
+        confRow = confRow + 1
+    End If
+
+    ' 3+ total agents windows
+    inCf = False: csf = 0
+    For s = 0 To G_SLOTS - 1
+        If tot(s) >= 3 Then
+            If Not inCf Then csf = s: inCf = True
+        Else
+            If inCf Then
+                wsG.Cells(confRow, 1).Value = "YELLOW - 3+ agents:"
+                wsG.Cells(confRow, 2).Value = ToTimeStr(G_BASE + csf * 10) & " to " & ToTimeStr(G_BASE + s * 10)
+                wsG.Cells(confRow, 1).Font.Color = RGB(133, 77, 14)
+                wsG.Cells(confRow, 2).Font.Color = RGB(133, 77, 14)
+                wsG.Cells(confRow, 1).Font.Bold = True
+                confRow = confRow + 1: inCf = False
+            End If
+        End If
+    Next s
+    If inCf Then
+        wsG.Cells(confRow, 1).Value = "YELLOW - 3+ agents:"
+        wsG.Cells(confRow, 2).Value = ToTimeStr(G_BASE + csf * 10) & "+"
+        wsG.Cells(confRow, 1).Font.Color = RGB(133, 77, 14)
+        wsG.Cells(confRow, 1).Font.Bold = True
+        confRow = confRow + 1
+    End If
+
+    ' Missing from lunch
+    assigned = ""
+    For si = 0 To 5
+        na = Trim(CStr(wsL.Cells(si + 3, 2).Value))
+        nb = Trim(CStr(wsL.Cells(si + 3, 3).Value))
+        If na <> "" Then assigned = assigned & "|" & na & "|"
+        If nb <> "" Then assigned = assigned & "|" & nb & "|"
+    Next si
+    missStr = ""
+    For i = 1 To MAX_AG
+        If AgName(i) <> "" Then
+            If InStr(assigned, "|" & AgName(i) & "|") = 0 Then
+                If missStr <> "" Then missStr = missStr & ", "
+                missStr = missStr & AgName(i)
+            End If
+        End If
+    Next i
+    If missStr <> "" Then
+        wsG.Cells(confRow, 1).Value = "INFO - No lunch assigned:"
+        wsG.Cells(confRow, 2).Value = missStr
+        wsG.Cells(confRow, 1).Font.Color = RGB(30, 58, 138)
+        wsG.Cells(confRow, 2).Font.Color = RGB(30, 58, 138)
+        wsG.Cells(confRow, 1).Font.Bold = True
+        confRow = confRow + 1
+    End If
+
+    If confRow = 31 Then
+        wsG.Cells(31, 1).Value = "OK  No conflicts detected."
+        wsG.Cells(31, 1).Font.Color = RGB(22, 163, 74)
+        wsG.Cells(31, 1).Font.Bold = True
+    End If
+
+    Application.ScreenUpdating = True
+    MsgBox "Gantt refreshed!", vbInformation, "Done"
+End Sub
