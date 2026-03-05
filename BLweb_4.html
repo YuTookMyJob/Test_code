@@ -760,7 +760,8 @@ function rdGantt(){
     let cfClass='';
     if(cfA==='red')cfClass='cf-red';else if(cfA==='yel')cfClass='cf-yel';else if(cfA==='org')cfClass='cf-org';
     const hasLunch=lunchSi>=0;
-    const trackCls=hasLunch?'g-track':'g-track g-no-lunch';
+    const effectiveLunch=hasLunch&&(a.lunchDur||0)>0;
+    const trackCls=effectiveLunch?'g-track':'g-track g-no-lunch';
 
     // Bars
     const bars=[];
@@ -784,13 +785,15 @@ function rdGantt(){
     if(hasLunch){
       const lStart=t2m(S.settings.lunchStart)+lunchSi*30;
       const dur=a.lunchDur||60;
-      bars.push(`<div class="g-bar lunch-bar ${cfClass}" style="left:${pctOf(lStart,range)};width:${wPct(dur,range)};background:${sc}"
-        data-agent="${agentId}" data-type="lunch"
-        onmousedown="barMD(event,'${agentId}','lunch',${lStart},${dur})">
-        <span class="g-bar-lbl">${esc(a.name)}</span>
-        <div class="g-resize" onmousedown="resMD(event,'${agentId}',${dur})"></div>
-        <div class="g-tip">Lunch ${m2t(lStart)} (${dur}min)${cfA?' ⚠':''}</div>
-      </div>`);
+      if(dur>0){
+        bars.push(`<div class="g-bar lunch-bar ${cfClass}" style="left:${pctOf(lStart,range)};width:${wPct(dur,range)};background:${sc}"
+          data-agent="${agentId}" data-type="lunch"
+          onmousedown="barMD(event,'${agentId}','lunch',${lStart},${dur})">
+          <span class="g-bar-lbl">${esc(a.name)}</span>
+          <div class="g-resize" onmousedown="resMD(event,'${agentId}',${dur})"></div>
+          <div class="g-tip">Lunch ${m2t(lStart)} (${dur}min)${cfA?' ⚠':''}</div>
+        </div>`);
+      }
     }
 
     html+=`<div class="g-row" id="grow-${agentId}"
@@ -1033,6 +1036,7 @@ function rdSummary(){
       const id=agents[col];
       if(!id)return`<td class="sum-name"></td>`;
       const a=getA(id);if(!a||!a.name)return`<td class="sum-name"></td>`;
+      if(a.lunchDur===0)return`<td class="sum-name" style="color:var(--txm)">N/A</td>`;
       const sc=skClass(a.skill);
       const durLabel=(a.lunchDur!==60)?` <span style="font-size:10px;opacity:.65;font-family:'Courier New',monospace">(${a.lunchDur} min)</span>`:'';
       return`<td class="sum-name skill-${sc}">${esc(a.name)}${durLabel}</td>`;
