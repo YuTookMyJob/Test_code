@@ -185,6 +185,8 @@ input::placeholder{color:var(--txm)}
 .g-no-lunch{border:1px dashed rgba(229,83,75,.35)!important}
 .g-tip{position:absolute;background:#1c2128;border:1px solid var(--bd2);border-radius:6px;color:var(--tx);font-size:11px;padding:5px 9px;pointer-events:none;z-index:999;white-space:nowrap;top:-32px;left:50%;transform:translateX(-50%);display:none}
 .g-bar:hover .g-tip{display:block}
+.setup-tbl th:nth-last-child(-n+2){text-align:center;width:52px}
+input[type=checkbox]{width:16px;height:16px;accent-color:var(--ac);cursor:pointer}
 .empty-state{text-align:center;padding:60px 20px;color:var(--txm)}
 .empty-state .ei{font-size:36px;margin-bottom:10px;opacity:.3}
 </style>
@@ -204,13 +206,18 @@ input::placeholder{color:var(--txm)}
 
 <div id="page-setup" class="page active">
   <div class="card">
-    <div class="card-title">Global Settings</div>
-    <div class="row-g">
-      <div class="fld"><span class="fld-lbl">AM Break Start</span><input type="time" id="s-amStart" value="10:00" onchange="saveSettings()"></div>
-      <div class="fld"><span class="fld-lbl">AM Break End</span><input type="time" id="s-amEnd" value="11:10" onchange="saveSettings()"></div>
-      <div class="fld"><span class="fld-lbl">PM Break Start</span><input type="time" id="s-pmStart" value="15:00" onchange="saveSettings()"></div>
-      <div class="fld"><span class="fld-lbl">PM Break End</span><input type="time" id="s-pmEnd" value="16:10" onchange="saveSettings()"></div>
-      <div class="fld"><span class="fld-lbl">Lunch Starts</span><input type="time" id="s-lunchStart" value="11:30" onchange="saveSettings()"></div>
+    <div class="card-title" style="cursor:pointer;user-select:none" onclick="toggleTimePickers()">
+      Global Time Settings
+      <span id="tp-toggle-lbl" style="font-size:10px;color:var(--ac);font-weight:600;text-transform:none;letter-spacing:0;margin-left:4px">▶ Show</span>
+    </div>
+    <div id="tp-fields" style="display:none">
+      <div class="row-g" style="padding-top:2px">
+        <div class="fld"><span class="fld-lbl">AM Break Start</span><input type="time" id="s-amStart" value="10:00" onchange="saveSettings()"></div>
+        <div class="fld"><span class="fld-lbl">AM Break End</span><input type="time" id="s-amEnd" value="11:10" onchange="saveSettings()"></div>
+        <div class="fld"><span class="fld-lbl">PM Break Start</span><input type="time" id="s-pmStart" value="15:00" onchange="saveSettings()"></div>
+        <div class="fld"><span class="fld-lbl">PM Break End</span><input type="time" id="s-pmEnd" value="16:10" onchange="saveSettings()"></div>
+        <div class="fld"><span class="fld-lbl">Lunch Starts</span><input type="time" id="s-lunchStart" value="11:30" onchange="saveSettings()"></div>
+      </div>
     </div>
   </div>
   <div class="card">
@@ -221,6 +228,8 @@ input::placeholder{color:var(--txm)}
           <th>#</th><th>Name</th><th>Skill</th>
           <th>Shift Start</th><th>Shift End</th>
           <th>Lunch Duration</th><th>Lunch Lockout</th>
+          <th title="Remove AM break for this agent">No AM</th>
+          <th title="Remove PM break for this agent">No PM</th>
         </tr></thead>
         <tbody id="setup-body"></tbody>
       </table>
@@ -249,7 +258,6 @@ input::placeholder{color:var(--txm)}
     <div class="legend">
       <div class="leg"><div class="leg-sw" style="background:rgba(229,83,75,.55);border:1px solid var(--red)"></div>3+ multi-skill (red)</div>
       <div class="leg"><div class="leg-sw" style="background:rgba(227,179,65,.55);border:1px solid var(--yel)"></div>3+ agents (yellow)</div>
-      <div class="leg"><div class="leg-sw" style="background:rgba(204,107,44,.55);border:1px solid var(--org)"></div>2+ with multi (orange)</div>
       <div class="leg"><div class="leg-sw" style="background:var(--sm-bg);border:1px solid var(--sm)"></div>Multi</div>
       <div class="leg"><div class="leg-sw" style="background:var(--ss-bg);border:1px solid var(--ss)"></div>Single</div>
       <div class="leg"><div class="leg-sw" style="background:var(--sp-bg);border:1px solid var(--sp)"></div>Partial</div>
@@ -282,7 +290,7 @@ input::placeholder{color:var(--txm)}
 // ═══════════════════════════════════════════════════
 const S = {
   agents: Array.from({length:12},(_,i)=>({
-    id:String(i),name:'',skill:'single',start:'09:00',end:'17:00',lunchDur:60,lockout:''
+    id:String(i),name:'',skill:'multi',start:'09:00',end:'17:00',lunchDur:60,lockout:'',noAm:false,noPm:false
   })),
   settings:{amStart:'10:00',amEnd:'11:10',pmStart:'15:00',pmEnd:'16:10',lunchStart:'11:30'},
   breakRows:[], // [{agentId,amMin,pmMin}]
@@ -325,7 +333,6 @@ function conflictLevel(agents){
   const tot=agents.length,multi=agents.filter(a=>a.skill==='multi').length;
   if(multi>=3)return'red';
   if(tot>=3)return'yel';
-  if(tot>=2&&multi>=1)return'org';
   return null;
 }
 
@@ -358,6 +365,14 @@ function missingFromLunch(){
 // ═══════════════════════════════════════════════════
 // SETUP TAB
 // ═══════════════════════════════════════════════════
+function toggleTimePickers(){
+  const f=document.getElementById('tp-fields');
+  const lbl=document.getElementById('tp-toggle-lbl');
+  const hidden=f.style.display==='none';
+  f.style.display=hidden?'block':'none';
+  lbl.textContent=hidden?'▼ Hide':'▶ Show';
+}
+
 function saveSettings(){
   S.settings.amStart=document.getElementById('s-amStart').value;
   S.settings.amEnd=document.getElementById('s-amEnd').value;
@@ -394,6 +409,14 @@ function rdSetup(){
           <option value="">— None —</option>
           ${lockoutOptions.replace(`value="${a.lockout}"`,`value="${a.lockout}" selected`)}
         </select>
+      </td>
+      <td style="text-align:center">
+        <input type="checkbox" title="Remove AM break" ${a.noAm?'checked':''}
+          onchange="S.agents[${i}].noAm=this.checked;rdBreaks&&rdBreaks()">
+      </td>
+      <td style="text-align:center">
+        <input type="checkbox" title="Remove PM break" ${a.noPm?'checked':''}
+          onchange="S.agents[${i}].noPm=this.checked;rdBreaks&&rdBreaks()">
       </td>
     </tr>`).join('');
 }
@@ -436,6 +459,12 @@ function rdBreaks(){
     const a=getA(r.agentId);if(!a)return'';
     const sc=skClass(a.skill);
     const agentOpts=active_.map(ag=>`<option value="${ag.id}"${ag.id===r.agentId?' selected':''}>${esc(ag.name)}</option>`).join('');
+    const amCell=a.noAm
+      ?`<td><span style="color:var(--txm);font-size:11px;font-style:italic;padding:0 9px">— removed —</span></td>`
+      :`<td><span class="tc am"><input type="time" value="${m2t(r.amMin)}" onchange="S.breakRows[${i}].amMin=t2m(this.value);rdGantt&&rdGantt()"></span></td>`;
+    const pmCell=a.noPm
+      ?`<td><span style="color:var(--txm);font-size:11px;font-style:italic;padding:0 9px">— removed —</span></td>`
+      :`<td><span class="tc pm"><input type="time" value="${m2t(r.pmMin)}" onchange="S.breakRows[${i}].pmMin=t2m(this.value);rdGantt&&rdGantt()"></span></td>`;
     return`<tr class="drag-row" draggable="true"
       ondragstart="bDragStart(event,${i})"
       ondragover="bDragOver(event,${i})"
@@ -443,16 +472,9 @@ function rdBreaks(){
       ondrop="bDrop(event,${i})"
       ondragend="bDragEnd(event)">
       <td><span class="drag-handle" title="Drag to reorder">⠿</span></td>
-      <td>
-        <select style="min-width:130px" onchange="swapBreakAgent(${i},this.value)">${agentOpts}</select>
-      </td>
+      <td><select style="min-width:130px" onchange="swapBreakAgent(${i},this.value)">${agentOpts}</select></td>
       <td><span class="sc ${sc}">${skLabel(a.skill)}</span></td>
-      <td><span class="tc am">
-        <input type="time" value="${m2t(r.amMin)}" onchange="S.breakRows[${i}].amMin=t2m(this.value);rdGantt&&rdGantt()">
-      </span></td>
-      <td><span class="tc pm">
-        <input type="time" value="${m2t(r.pmMin)}" onchange="S.breakRows[${i}].pmMin=t2m(this.value);rdGantt&&rdGantt()">
-      </span></td>
+      ${amCell}${pmCell}
     </tr>`;
   }).join('');
 }
@@ -596,7 +618,6 @@ function rdLunches(){
     const cf=slotConflict(si);
     if(cf==='red')warns.push({t:'err',msg:`🔴 ${slotTime(si)}: 3+ multi-skill agents on lunch`});
     else if(cf==='yel')warns.push({t:'wrn',msg:`🟡 ${slotTime(si)}: 3+ agents on lunch simultaneously`});
-    else if(cf==='org')warns.push({t:'inf',msg:`🟠 ${slotTime(si)}: 2+ agents including multi-skill`});
   }
   document.getElementById('lunch-warns').innerHTML=warns.map(w=>`<div class="warn-tag ${w.t}">${w.msg}</div>`).join('');
 }
@@ -728,12 +749,12 @@ function rdGantt(){
     const gridLines=ticks.map(m=>`<div class="g-grid-line" style="left:${pctOf(m,range)}"></div>`).join('');
 
     if(br){
-      bars.push(`<div class="g-bar am-break" style="left:${pctOf(br.amMin,range)};width:${wPct(10,range)}"
+      if(!a.noAm)bars.push(`<div class="g-bar am-break" style="left:${pctOf(br.amMin,range)};width:${wPct(10,range)}"
         data-agent="${agentId}" data-type="am"
         onmousedown="barMD(event,'${agentId}','am',${br.amMin},10)">
         <div class="g-tip">AM Break ${m2t(br.amMin)}</div>
       </div>`);
-      bars.push(`<div class="g-bar pm-break" style="left:${pctOf(br.pmMin,range)};width:${wPct(10,range)}"
+      if(!a.noPm)bars.push(`<div class="g-bar pm-break" style="left:${pctOf(br.pmMin,range)};width:${wPct(10,range)}"
         data-agent="${agentId}" data-type="pm"
         onmousedown="barMD(event,'${agentId}','pm',${br.pmMin},10)">
         <div class="g-tip">PM Break ${m2t(br.pmMin)}</div>
@@ -885,9 +906,6 @@ function rdConflictPanel(){
       items.push({cls:'cf-red-item',icon:'🔴',title:`${ts} — 3+ Multi-Skill agents on lunch`,detail:`Multi-skill agents on lunch simultaneously: ${multiNames}. This reduces team capability significantly.`});
     } else if(cf==='yel'){
       items.push({cls:'cf-yel-item',icon:'🟡',title:`${ts} — 3+ agents on lunch at the same time`,detail:`Agents currently on lunch: ${names}. Consider spreading lunches to maintain coverage.`});
-    } else if(cf==='org'){
-      const multiNames=agents.filter(a=>a.skill==='multi').map(a=>a.name).join(', ');
-      items.push({cls:'cf-org-item',icon:'🟠',title:`${ts} — 2+ agents including multi-skill`,detail:`Multi-skill: ${multiNames}. Total on lunch: ${names}.`});
     }
   }
 
