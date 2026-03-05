@@ -189,6 +189,21 @@ input::placeholder{color:var(--txm)}
 input[type=checkbox]{width:16px;height:16px;accent-color:var(--ac);cursor:pointer}
 .empty-state{text-align:center;padding:60px 20px;color:var(--txm)}
 .empty-state .ei{font-size:36px;margin-bottom:10px;opacity:.3}
+/* ── SUMMARY TAB ── */
+.sum-wrap{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:20px 24px;display:inline-block;min-width:320px}
+.sum-section-hdr{font-weight:800;font-size:13px;color:var(--tx);padding:0 0 6px;letter-spacing:.02em}
+.sum-tbl{border-collapse:collapse;margin-bottom:22px}
+.sum-tbl td{padding:4px 24px 4px 0;font-size:13px;vertical-align:middle;white-space:nowrap;color:var(--tx)}
+.sum-tbl td:first-child{font-weight:500}
+.sum-tbl td.sum-time{font-family:'Courier New',monospace;font-weight:700;color:var(--txd);min-width:64px}
+.sum-tbl td.sum-name{font-weight:500}
+.sum-tbl td.sum-name.skill-multi{color:var(--purl)}
+.sum-tbl td.sum-name.skill-single{color:#88c2ff}
+.sum-tbl td.sum-name.skill-partial{color:var(--orgl)}
+.sum-tbl .sum-gap td{padding-top:10px}
+.sum-warn{display:inline-flex;align-items:center;gap:5px;border-radius:4px;font-size:11px;font-weight:600;padding:3px 9px;margin-left:8px}
+.sum-warn.red{background:var(--red-bg);color:var(--redl)}
+.sum-warn.yel{background:var(--yel-bg);color:var(--yel)}
 </style>
 </head>
 <body>
@@ -202,6 +217,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--ac);cursor:pointe
   <button class="tab-btn" onclick="switchTab('breaks',this)">② Breaks</button>
   <button class="tab-btn" onclick="switchTab('lunches',this)">③ Lunches</button>
   <button class="tab-btn" onclick="switchTab('gantt',this)">④ Gantt</button>
+  <button class="tab-btn" onclick="switchTab('summary',this)">⑤ Summary</button>
 </nav>
 
 <div id="page-setup" class="page active">
@@ -267,7 +283,14 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--ac);cursor:pointe
   <div class="warn-bar" id="lunch-warns"></div>
 </div>
 
-<div id="page-gantt" class="page">
+<div id="page-summary" class="page">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+    <button class="btn btn-pri" onclick="copySummary()">⎘ Copy to clipboard</button>
+    <span id="copy-confirm" style="font-size:12px;color:var(--grn);opacity:0;transition:opacity .3s">✓ Copied!</span>
+    <span style="color:var(--txm);font-size:11px;margin-left:4px">Paste directly into Teams, Outlook or Notepad</span>
+  </div>
+  <div id="summary-view"></div>
+</div>
   <div class="gantt-legend">
     <div class="leg"><div class="leg-sw" style="background:var(--sm);opacity:.7"></div>Multi-skill</div>
     <div class="leg"><div class="leg-sw" style="background:var(--ss);opacity:.7"></div>Single-skill</div>
@@ -942,6 +965,119 @@ function rdConflictPanel(){
 }
 
 // ═══════════════════════════════════════════════════
+// SUMMARY TAB
+// ═══════════════════════════════════════════════════
+function rdSummary(){
+  syncBreakRows();
+  const el=document.getElementById('summary-view');
+  const active_=active();
+  if(!active_.length){
+    el.innerHTML=`<div class="empty-state"><div class="ei">📋</div>Add agent names in Setup first.</div>`;
+    return;
+  }
+
+  // ── Breaks section ──
+  let breaksRows='';
+  S.breakRows.forEach(r=>{
+    const a=getA(r.agentId);if(!a||!a.name)return;
+    const sc=skClass(a.skill);
+    const amCell=a.noAm
+      ?`<td class="sum-time" style="color:var(--txm)">—</td>`
+      :`<td class="sum-time">${m2t(r.amMin)}</td>`;
+    const pmCell=a.noPm
+      ?`<td class="sum-time" style="color:var(--txm)">—</td>`
+      :`<td class="sum-time">${m2t(r.pmMin)}</td>`;
+    breaksRows+=`<tr>
+      <td class="sum-name skill-${sc}">${esc(a.name)}</td>
+      ${amCell}${pmCell}
+    </tr>`;
+  });
+
+  // ── Lunches section ──
+  let lunchRows='';
+  for(let si=0;si<SLOT_COUNT;si++){
+    const cf=slotConflict(si);
+    const warnHtml=cf==='red'
+      ?`<span class="sum-warn red">⚠ 3+ multi-skill</span>`
+      :cf==='yel'?`<span class="sum-warn yel">⚠ 3+ agents</span>`:'';
+    const agents=S.lunches[si];
+    const cells=[0,1].map(col=>{
+      const id=agents[col];
+      if(!id)return`<td class="sum-name" style="color:var(--txm)">—</td>`;
+      const a=getA(id);if(!a||!a.name)return`<td class="sum-name" style="color:var(--txm)">—</td>`;
+      const sc=skClass(a.skill);
+      const durLabel=(a.lunchDur!==60)?` <span style="font-size:10px;opacity:.65;font-family:'Courier New',monospace">(${a.lunchDur} min)</span>`:'';
+      return`<td class="sum-name skill-${sc}">${esc(a.name)}${durLabel}</td>`;
+    }).join('');
+    lunchRows+=`<tr>
+      <td class="sum-time">${slotTime(si)}${warnHtml}</td>
+      ${cells}
+    </tr>`;
+  }
+
+  // ── Warnings for missing/dups ──
+  const dups=duplicates();
+  const miss=missingFromLunch();
+  let noticesHtml='';
+  if(dups.size>0||miss.length>0){
+    noticesHtml=`<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:6px">`;
+    if(dups.size>0)noticesHtml+=`<span class="warn-tag err">⚠ Duplicates: ${[...dups].map(id=>esc(getA(id)?.name||'?')).join(', ')}</span>`;
+    if(miss.length>0)noticesHtml+=`<span class="warn-tag wrn">⚠ Not assigned: ${miss.map(a=>esc(a.name)).join(', ')}</span>`;
+    noticesHtml+=`</div>`;
+  }
+
+  el.innerHTML=`<div class="sum-wrap">
+    <table class="sum-tbl">
+      <tr><td colspan="3" class="sum-section-hdr">Breaks</td></tr>
+      ${breaksRows}
+      <tr class="sum-gap"><td colspan="3" class="sum-section-hdr">Lunches</td></tr>
+      ${lunchRows}
+    </table>
+  </div>${noticesHtml}`;
+}
+
+function copySummary(){
+  syncBreakRows();
+  const active_=active();
+  if(!active_.length)return;
+  const lines=[];
+  lines.push('Breaks');
+  S.breakRows.forEach(r=>{
+    const a=getA(r.agentId);if(!a||!a.name)return;
+    const am=a.noAm?'—':m2t(r.amMin);
+    const pm=a.noPm?'—':m2t(r.pmMin);
+    lines.push(`${a.name}\t${am}\t${pm}`);
+  });
+  lines.push('');
+  lines.push('Lunches');
+  for(let si=0;si<SLOT_COUNT;si++){
+    const t=slotTime(si);
+    const ag=S.lunches[si];
+    const n1=ag[0]?getA(ag[0])?.name||'':'';
+    const n2=ag[1]?getA(ag[1])?.name||'':'';
+    const d1=ag[0]&&getA(ag[0])?.lunchDur!==60?` (${getA(ag[0]).lunchDur} min)`:'';
+    const d2=ag[1]&&getA(ag[1])?.lunchDur!==60?` (${getA(ag[1]).lunchDur} min)`:'';
+    lines.push(`${t}\t${n1+d1}\t${n2+d2}`);
+  }
+  navigator.clipboard.writeText(lines.join('\n')).then(()=>{
+    const c=document.getElementById('copy-confirm');
+    c.style.opacity='1';
+    setTimeout(()=>c.style.opacity='0',2000);
+  }).catch(()=>{
+    // Fallback for locked-down browsers
+    const ta=document.createElement('textarea');
+    ta.value=lines.join('\n');
+    ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const c=document.getElementById('copy-confirm');
+    c.style.opacity='1';
+    setTimeout(()=>c.style.opacity='0',2000);
+  });
+}
+
+// ═══════════════════════════════════════════════════
 // TAB SWITCHING
 // ═══════════════════════════════════════════════════
 function switchTab(name,btn){
@@ -953,6 +1089,7 @@ function switchTab(name,btn){
   if(name==='breaks'){syncBreakRows();rdBreaks();}
   if(name==='lunches')rdLunches();
   if(name==='gantt'){syncGanttOrder();rdGantt();}
+  if(name==='summary')rdSummary();
 }
 
 // ═══════════════════════════════════════════════════
