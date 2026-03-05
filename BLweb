@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Break & Lunch Scheduler</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f1f5f9;color:#1e293b;min-height:100vh}
+.app{max-width:1200px;margin:0 auto;padding:20px 14px}
+h1{font-size:1.35rem;font-weight:700}.sub{color:#64748b;font-size:.82rem;margin:3px 0 18px}
+.card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.09);overflow:hidden}
+.tabs{display:flex;border-bottom:1px solid #e2e8f0}
+.tb{flex:1;padding:11px 8px;text-align:center;cursor:pointer;font-size:.875rem;font-weight:500;color:#64748b;border-bottom:3px solid transparent;margin-bottom:-1px;transition:all .15s;user-select:none}
+.tb:hover{color:#1e293b;background:#f8fafc}.tb.on{color:#7c3aed;border-bottom-color:#7c3aed}
+.pnl{display:none;padding:18px}.pnl.on{display:block}
+table{width:100%;border-collapse:collapse}
+th{background:#f8fafc;padding:9px 11px;text-align:left;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #e2e8f0}
+td{padding:6px 11px;border-bottom:1px solid #f1f5f9;font-size:.875rem;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+input[type=text]{width:100%;padding:5px 9px;border:1px solid #e2e8f0;border-radius:6px;font-size:.875rem;font-family:inherit}
+input[type=text]:focus{outline:none;border-color:#7c3aed;box-shadow:0 0 0 2px rgba(124,58,237,.15)}
+select{width:100%;padding:5px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:.875rem;font-family:inherit;cursor:pointer;background:#fff}
+select:focus{outline:none;border-color:#7c3aed}
+.btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-size:.85rem;font-weight:600;font-family:inherit;transition:background .15s}
+.b-pur{background:#7c3aed;color:#fff}.b-pur:hover{background:#6d28d9}
+.b-gry{background:#e2e8f0;color:#475569}.b-gry:hover{background:#cbd5e1}
+.bdg{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.75rem;font-weight:500}
+.ms{background:#dcfce7;color:#166534}.ss{background:#dbeafe;color:#1d4ed8}.pm{background:#fef9c3;color:#854d0e}
+.r-red{background:#fee2e2!important}.r-yel{background:#fef9c3!important}
+.c-red{color:#dc2626;font-size:.78rem;font-weight:600}
+.c-yel{color:#b45309;font-size:.78rem;font-weight:600}
+.c-ok{color:#16a34a;font-size:.78rem;font-weight:600}
+.tbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.note{font-size:.78rem;color:#94a3b8;margin-top:8px}
+.alert-box{margin-top:8px;padding:8px 12px;border-radius:8px;font-size:.82rem;border-left:3px solid}
+.a-err{background:#fee2e2;border-color:#dc2626;color:#7f1d1d}
+.a-wrn{background:#fef9c3;border-color:#b45309;color:#78350f}
+.a-inf{background:#eff6ff;border-color:#3b82f6;color:#1e3a8a}
+.sh{font-size:.93rem;font-weight:600;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #f1f5f9}
+.pb{margin-bottom:22px}
+.empty-msg{text-align:center;color:#94a3b8;padding:16px;font-size:.875rem}
+.drag-handle{cursor:grab;color:#cbd5e1;font-size:1rem;padding:0 4px;user-select:none;line-height:1}
+.drag-handle:active{cursor:grabbing}
+.agent-drag-handle{color:#a78bfa!important}
+tr.dragging{opacity:.4}
+tr.drag-over td{border-top:2px solid #7c3aed!important}
+td.agent-drop-over{outline:2px dashed #7c3aed;outline-offset:-2px;background:#ede9fe!important}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.lg{display:flex;align-items:center;gap:6px;font-size:.78rem;color:#475569}
+.ld{width:14px;height:14px;border-radius:3px;flex-shrink:0;border:1px solid rgba(0,0,0,.1)}
+.gantt-outer{overflow-x:auto;border:1px solid #e2e8f0;border-radius:8px}
+.gantt-tbl{border-collapse:collapse;table-layout:fixed}
+.gantt-tbl th,.gantt-tbl td{border:1px solid #e2e8f0}
+.gantt-tbl th{background:#7c3aed;color:#fff;font-size:.6rem;font-weight:600;padding:0}
+.gh-lbl{display:block;writing-mode:vertical-rl;transform:rotate(180deg);padding:5px 4px;font-size:.6rem}
+.gantt-tbl td{height:22px;width:22px;min-width:22px;padding:0}
+.gcol-hnd{width:24px;min-width:24px;text-align:center;background:#f8fafc;position:sticky;left:0;z-index:2;border-right:1px solid #e2e8f0}
+.gcol-name{width:160px;min-width:160px;font-size:.8rem;font-weight:600;padding:5px 9px!important;white-space:nowrap;background:#f8fafc!important;position:sticky;left:24px;z-index:2;border-right:1px solid #e2e8f0!important}
+.gcol-skill{width:130px;min-width:130px;font-size:.72rem;padding:4px 9px!important;white-space:nowrap;background:#f8fafc!important;position:sticky;left:184px;z-index:2;border-right:2px solid #cbd5e1!important}
+.gh-hnd{width:24px;min-width:24px;position:sticky;left:0;z-index:3;background:#7c3aed}
+.gh-name{width:160px;min-width:160px;text-align:left;padding:8px 9px!important;position:sticky;left:24px;z-index:3;background:#7c3aed}
+.gh-skill{width:130px;min-width:130px;text-align:left;padding:8px 9px!important;position:sticky;left:184px;z-index:3;background:#7c3aed}
+.g-dim{color:#cbd5e1;font-style:italic;font-weight:400!important;font-size:.78rem}
+.conflict-sec{margin-top:14px}
+.cbox{padding:10px 14px;border-radius:8px;font-size:.82rem;border-left:3px solid;margin-bottom:8px}
+.cbox-ok{background:#dcfce7;border-color:#16a34a;color:#14532d}
+.cbox-err{background:#fee2e2;border-color:#dc2626;color:#7f1d1d}
+.cbox-wrn{background:#fef9c3;border-color:#b45309;color:#78350f}
+.cbox-inf{background:#eff6ff;border-color:#3b82f6;color:#1e3a8a}
+.ci{margin-top:4px;font-size:.8rem}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>📅 Break &amp; Lunch Scheduler</h1>
+  <p class="sub">Enter agents, assign lunches, then view the Gantt chart.</p>
+  <div class="card">
+    <div class="tabs">
+      <div class="tb on"  onclick="go('agents',this)">👤 Agents</div>
+      <div class="tb" onclick="go('breaks',this)">☕ Breaks</div>
+      <div class="tb" onclick="go('lunch',this)">🥗 Lunches</div>
+      <div class="tb" onclick="go('gantt',this)">📊 Gantt</div>
+    </div>
+
+    <!-- AGENTS -->
+    <div id="pnl-agents" class="pnl on">
+      <p style="font-size:.82rem;color:#64748b;margin-bottom:13px">Enter up to 12 agents. Drag <span style="color:#7c3aed">⠿</span> to reorder. Lunch duration is free text in minutes (default 60).</p>
+      <table>
+        <thead><tr>
+          <th style="width:24px"></th>
+          <th style="width:30px">#</th>
+          <th>Agent Name</th>
+          <th style="width:185px">Skill Set</th>
+          <th style="width:145px">Lunch Preference</th>
+          <th style="width:110px">Lunch Duration (min)</th>
+        </tr></thead>
+        <tbody id="ag-body"></tbody>
+      </table>
+    </div>
+
+    <!-- BREAKS -->
+    <div id="pnl-breaks" class="pnl">
+      <div class="pb">
+        <div class="sh">Morning Breaks — 10:00 to 11:10 (first 7 agents only)</div>
+        <table><thead><tr><th>Agent</th><th>Skill Set</th><th>Starts</th><th>Ends</th></tr></thead>
+        <tbody id="brk-mor"></tbody></table>
+      </div>
+      <div class="pb">
+        <div class="sh">Afternoon Breaks — from 15:00</div>
+        <table><thead><tr><th>Agent</th><th>Skill Set</th><th>Starts</th><th>Ends</th></tr></thead>
+        <tbody id="brk-aft"></tbody></table>
+        <p class="note">Agents 8–12 have no morning break. All agents receive an afternoon break.</p>
+      </div>
+    </div>
+
+    <!-- LUNCHES -->
+    <div id="pnl-lunch" class="pnl">
+      <div class="legend">
+        <div class="lg"><div class="ld" style="background:#fef9c3;border-color:#b45309"></div>3+ agents simultaneously</div>
+        <div class="lg"><div class="ld" style="background:#fee2e2;border-color:#dc2626"></div>3+ Multi Skill simultaneously</div>
+        <div class="lg"><div class="ld" style="background:#fef9c3;border-color:#b45309"></div>Same skill in slot</div>
+        <div class="lg"><span class="agent-drag-handle drag-handle" style="font-size:.9rem">⠿</span>&nbsp;Drag agent between slots</div>
+      </div>
+      <div class="tbar">
+        <button class="btn b-pur" onclick="autoLunch()">⚡ Auto-assign</button>
+        <button class="btn b-gry" onclick="clearLunch()">✕ Clear all</button>
+      </div>
+      <table>
+        <thead><tr>
+          <th style="width:24px"></th>
+          <th style="width:68px">Slot</th>
+          <th>Agent 1</th>
+          <th>Agent 2</th>
+          <th style="width:130px">Status</th>
+        </tr></thead>
+        <tbody id="lu-body"></tbody>
+      </table>
+      <div id="lu-alert"></div>
+      <div id="lu-missing"></div>
+    </div>
+
+    <!-- GANTT -->
+    <div id="pnl-gantt" class="pnl">
+      <div class="legend">
+        <div class="lg"><div class="ld" style="background:#fb923c"></div>Morning Break</div>
+        <div class="lg"><div class="ld" style="background:#60a5fa"></div>Afternoon Break</div>
+        <div class="lg"><div class="ld" style="background:#4ade80;border-color:#16a34a"></div>Lunch – Multi Skill</div>
+        <div class="lg"><div class="ld" style="background:#93c5fd;border-color:#3b82f6"></div>Lunch – Single Skill</div>
+        <div class="lg"><div class="ld" style="background:#fde68a;border-color:#d97706"></div>Lunch – Partial Multi</div>
+        <div class="lg"><div class="ld" style="background:#fef08a"></div>3+ agents on lunch</div>
+        <div class="lg"><div class="ld" style="background:#fca5a5"></div>3+ Multi Skill on lunch</div>
+      </div>
+      <div class="gantt-outer"><table class="gantt-tbl" id="gantt-tbl"></table></div>
+      <div class="conflict-sec" id="gantt-conf"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SLOTS=42, BASE=600;
+const LUNCH_MINS=[690,720,750,780,810,840];
+const LUNCH_LBL=["11:30","12:00","12:30","13:00","13:30","14:00"];
+const SKILLS=["Multi Skill","Single Skill","Partial Multi Skill"];
+const SKILL_CLS={"Multi Skill":"ms","Single Skill":"ss","Partial Multi Skill":"pm"};
+const PREF_OPTS=["No preference","11:30","12:00","12:30","13:00","13:30","14:00"];
+
+// Skill lunch colours: [normal, short(<=30min)]
+const SKILL_LUNCH_CLR={
+  "Multi Skill":    ["#4ade80","#bbf7d0"],
+  "Single Skill":   ["#93c5fd","#bfdbfe"],
+  "Partial Multi Skill": ["#fde68a","#fef3c7"]
+};
+
+let agents=Array(12).fill(0).map(()=>({name:'',skill:'Multi Skill',pref:'No preference',dur:'60'}));
+let lunch=Array(6).fill(0).map(()=>({a1:'',a2:''}));
+
+const toTime=m=>`${String(~~(m/60)).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`;
+const addMin=(base,m)=>{const[h,n]=base.split(':').map(Number);return toTime(h*60+n+m)};
+const active=()=>agents.map((a,i)=>({...a,i})).filter(a=>a.name.trim());
+const skBdg=s=>`<span class="bdg ${SKILL_CLS[s]||'ms'}">${s}</span>`;
+const getDur=nm=>{const ag=agents.find(a=>a.name===nm);return Math.max(10,parseInt(ag?.dur)||60);};
+const getSkill=nm=>{return agents.find(a=>a.name===nm)?.skill||'Multi Skill';};
+
+// ── Conflict maps ─────────────────────────────────────────
+function buildCounts(){
+  const total=Array(SLOTS).fill(0),ms=Array(SLOTS).fill(0);
+  lunch.forEach((sl,si)=>{
+    [sl.a1,sl.a2].forEach(nm=>{
+      if(!nm)return;
+      const ag=agents.find(a=>a.name===nm);
+      const dur=getDur(nm),st=(LUNCH_MINS[si]-BASE)/10;
+      for(let s=st;s<st+dur/10&&s<SLOTS;s++){
+        total[s]++;
+        if(ag&&ag.skill==='Multi Skill')ms[s]++;
+      }
+    });
+  });
+  return{total,ms};
+}
+
+function getWindows(cnt,thr){
+  const w=[];let inC=false,cs=0;
+  for(let s=0;s<SLOTS;s++){
+    if(cnt[s]>=thr){if(!inC){cs=s;inC=true;}}
+    else{if(inC){w.push({from:BASE+cs*10,to:BASE+s*10});inC=false;}}
+  }
+  if(inC)w.push({from:BASE+cs*10,to:BASE+SLOTS*10});
+  return w;
+}
+
+function sameSkill(si){
+  const{a1,a2}=lunch[si];
+  if(!a1||!a2)return false;
+  return getSkill(a1)===getSkill(a2);
+}
+
+function rowConflict(si,total,ms){
+  const{a1,a2}=lunch[si];
+  let r3ms=false,r3=false;
+  for(const nm of[a1,a2]){
+    if(!nm)continue;
+    const dur=getDur(nm),st=(LUNCH_MINS[si]-BASE)/10;
+    for(let s=st;s<st+dur/10&&s<SLOTS;s++){
+      if(ms[s]>=3)r3ms=true;
+      if(total[s]>=3)r3=true;
+    }
+  }
+  if(r3ms)return'red';
+  if(r3)return'yellow';
+  if(sameSkill(si))return'same';
+  return'';
+}
+
+// ── Tabs ──────────────────────────────────────────────────
+function go(name,el){
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.pnl').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('pnl-'+name).classList.add('on');
+  if(name==='breaks')renderBreaks();
+  if(name==='lunch')renderLunch();
+  if(name==='gantt')renderGantt();
+}
+
+// ── Agents ────────────────────────────────────────────────
+let agDragSrc=null;
+function renderAgents(){
+  const tbody=document.getElementById('ag-body');
+  tbody.innerHTML=agents.map((a,i)=>`
+    <tr draggable="true" data-idx="${i}" style="background:${i%2?'#fff':'#f8fafc'}">
+      <td style="width:24px;text-align:center"><span class="drag-handle">⠿</span></td>
+      <td style="color:#94a3b8;font-size:.78rem;text-align:center">${i+1}</td>
+      <td><input type="text" value="${a.name.replace(/"/g,'&quot;')}" placeholder="Agent name…"
+          oninput="agents[${i}].name=this.value.trim()"></td>
+      <td><select onchange="agents[${i}].skill=this.value">
+        ${SKILLS.map(s=>`<option value="${s}"${a.skill===s?' selected':''}>${s}</option>`).join('')}
+      </select></td>
+      <td><select onchange="agents[${i}].pref=this.value">
+        ${PREF_OPTS.map(p=>`<option value="${p}"${a.pref===p?' selected':''}>${p}</option>`).join('')}
+      </select></td>
+      <td><input type="text" value="${a.dur}" placeholder="60"
+          style="width:58px;text-align:center"
+          oninput="agents[${i}].dur=this.value.trim()"></td>
+    </tr>`).join('');
+
+  tbody.querySelectorAll('tr').forEach(tr=>{
+    tr.addEventListener('dragstart',e=>{agDragSrc=tr;tr.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+    tr.addEventListener('dragend',()=>{tr.classList.remove('dragging');tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over'));});
+    tr.addEventListener('dragover',e=>{e.preventDefault();tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over'));if(tr!==agDragSrc)tr.classList.add('drag-over');});
+    tr.addEventListener('drop',e=>{
+      e.preventDefault();
+      if(!agDragSrc||agDragSrc===tr)return;
+      const from=+agDragSrc.dataset.idx,to=+tr.dataset.idx;
+      const moved=agents.splice(from,1)[0];
+      agents.splice(to,0,moved);
+      renderAgents();
+    });
+  });
+}
+
+// ── Breaks ────────────────────────────────────────────────
+function renderBreaks(){
+  const act=active();
+  const morEl=document.getElementById('brk-mor');
+  const aftEl=document.getElementById('brk-aft');
+  if(!act.length){
+    const e=`<tr><td colspan="4" class="empty-msg">No agents added yet.</td></tr>`;
+    morEl.innerHTML=e;aftEl.innerHTML=e;return;
+  }
+  morEl.innerHTML=act.slice(0,7).map((a,n)=>`
+    <tr style="background:${n%2?'#fff':'#f8fafc'}">
+      <td><strong>${a.name}</strong></td><td>${skBdg(a.skill)}</td>
+      <td>${addMin('10:00',n*10)}</td><td>${addMin('10:00',n*10+10)}</td>
+    </tr>`).join('')+
+    (act.length>7?`<tr><td colspan="4" style="color:#94a3b8;font-style:italic;font-size:.78rem;padding:8px 11px">
+      ${act.slice(7).map(a=>a.name).join(', ')} — no morning break (window full at 11:10).</td></tr>`:'');
+  aftEl.innerHTML=act.map((a,n)=>`
+    <tr style="background:${n%2?'#fff':'#f8fafc'}">
+      <td><strong>${a.name}</strong></td><td>${skBdg(a.skill)}</td>
+      <td>${addMin('15:00',n*10)}</td><td>${addMin('15:00',n*10+10)}</td>
+    </tr>`).join('');
+}
+
+// ── Lunches ───────────────────────────────────────────────
+let lunchRowDragSrc=null, agentDragSrc=null;
+
+function agentCell(si,pos,nm){
+  const key=pos===1?'a1':'a2';
+  const act=active();
+  const opts=`<option value="">— None —</option>`+
+    act.map(a=>`<option value="${a.name.replace(/"/g,'&quot;')}"${nm===a.name?' selected':''}>${a.name}</option>`).join('');
+  return`<td class="agent-slot" data-si="${si}" data-pos="${pos}">
+    <div style="display:flex;align-items:center;gap:4px">
+      <span class="drag-handle agent-drag-handle" draggable="true"
+        data-si="${si}" data-pos="${pos}" title="Drag agent to another slot">⠿</span>
+      <select style="flex:1" onchange="lunch[${si}].${key}=this.value;renderLunch()">${opts}</select>
+    </div>
+  </td>`;
+}
+
+function renderLunch(){
+  lunchRowDragSrc=null; agentDragSrc=null;
+  const{total,ms}=buildCounts();
+  const tbody=document.getElementById('lu-body');
+
+  tbody.innerHTML=lunch.map((sl,si)=>{
+    const c=rowConflict(si,total,ms);
+    const cls=c==='red'?'r-red':c==='yellow'||c==='same'?'r-yel':'';
+    const stat=c==='red'?`<span class="c-red">⚠ 3+ Multi Skill</span>`:
+                c==='yellow'?`<span class="c-yel">⚠ 3+ on lunch</span>`:
+                c==='same'?`<span class="c-yel">⚠ Same skill</span>`:
+                sl.a1||sl.a2?`<span class="c-ok">✓ OK</span>`:'';
+    return`<tr draggable="true" data-si="${si}" class="${cls}">
+      <td style="width:24px;text-align:center"><span class="drag-handle" title="Drag row to reorder">⠿</span></td>
+      <td><strong>${LUNCH_LBL[si]}</strong></td>
+      ${agentCell(si,1,sl.a1)}
+      ${agentCell(si,2,sl.a2)}
+      <td>${stat}</td></tr>`;
+  }).join('');
+
+  // ── Row drag ──────────────────────────────────────────
+  tbody.querySelectorAll('tr[draggable]').forEach(tr=>{
+    tr.addEventListener('dragstart',e=>{
+      if(e.target.classList.contains('agent-drag-handle'))return;
+      lunchRowDragSrc=tr;tr.classList.add('dragging');e.dataTransfer.effectAllowed='move';
+    });
+    tr.addEventListener('dragend',()=>{tr.classList.remove('dragging');tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over'));});
+    tr.addEventListener('dragover',e=>{
+      if(agentDragSrc)return;
+      e.preventDefault();tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over'));
+      if(tr!==lunchRowDragSrc)tr.classList.add('drag-over');
+    });
+    tr.addEventListener('drop',e=>{
+      if(agentDragSrc)return;
+      e.preventDefault();
+      if(!lunchRowDragSrc||lunchRowDragSrc===tr)return;
+      const from=+lunchRowDragSrc.dataset.si,to=+tr.dataset.si;
+      const tmp={...lunch[from]};
+      lunch[from]={...lunch[to]};
+      lunch[to]=tmp;
+      renderLunch();
+    });
+  });
+
+  // ── Agent cell drag ───────────────────────────────────
+  tbody.querySelectorAll('.agent-drag-handle').forEach(h=>{
+    h.addEventListener('dragstart',e=>{
+      e.stopPropagation();
+      agentDragSrc={si:+h.dataset.si,pos:+h.dataset.pos};
+      h.closest('tr').classList.add('dragging');
+      e.dataTransfer.effectAllowed='move';
+    });
+    h.addEventListener('dragend',()=>{
+      agentDragSrc=null;
+      tbody.querySelectorAll('tr').forEach(r=>r.classList.remove('dragging','drag-over'));
+      tbody.querySelectorAll('td.agent-drop-over').forEach(t=>t.classList.remove('agent-drop-over'));
+    });
+  });
+
+  tbody.querySelectorAll('.agent-slot').forEach(cell=>{
+    cell.addEventListener('dragover',e=>{
+      if(!agentDragSrc)return;
+      e.preventDefault();e.stopPropagation();
+      tbody.querySelectorAll('td.agent-drop-over').forEach(t=>t.classList.remove('agent-drop-over'));
+      cell.classList.add('agent-drop-over');
+    });
+    cell.addEventListener('dragleave',()=>cell.classList.remove('agent-drop-over'));
+    cell.addEventListener('drop',e=>{
+      if(!agentDragSrc)return;
+      e.preventDefault();e.stopPropagation();
+      cell.classList.remove('agent-drop-over');
+      const tSi=+cell.dataset.si,tPos=+cell.dataset.pos;
+      const{si:fSi,pos:fPos}=agentDragSrc;
+      if(fSi===tSi&&fPos===tPos)return;
+      const fk=fPos===1?'a1':'a2',tk=tPos===1?'a1':'a2';
+      const tmp=lunch[fSi][fk];
+      lunch[fSi][fk]=lunch[tSi][tk];
+      lunch[tSi][tk]=tmp;
+      agentDragSrc=null;
+      renderLunch();
+    });
+  });
+
+  // ── Conflict alerts ───────────────────────────────────
+  const ms3=getWindows(ms,3);
+  const tot3=getWindows(total,3).filter(w=>!ms3.some(m=>m.from===w.from&&m.to===w.to));
+  document.getElementById('lu-alert').innerHTML=
+    ms3.map(w=>`<div class="alert-box a-err">🔴 <strong>3+ Multi Skill agents on lunch:</strong> ${toTime(w.from)} – ${toTime(w.to)}</div>`).join('')+
+    tot3.map(w=>`<div class="alert-box a-wrn">🟡 <strong>3+ agents on lunch simultaneously:</strong> ${toTime(w.from)} – ${toTime(w.to)}</div>`).join('');
+
+  // ── Missing agent warning ─────────────────────────────
+  const assigned=new Set(lunch.flatMap(sl=>[sl.a1,sl.a2]).filter(Boolean));
+  const missing=active().filter(a=>!assigned.has(a.name));
+  document.getElementById('lu-missing').innerHTML=missing.length
+    ?`<div class="alert-box a-inf" style="margin-top:10px">ℹ️ <strong>Not assigned to a lunch slot:</strong> ${missing.map(a=>`<strong>${a.name}</strong> ${skBdg(a.skill)}`).join(', ')}</div>`
+    :'';
+}
+
+// ── Auto-assign ───────────────────────────────────────────
+function tryPlace(si,name){
+  const act=active();
+  const max=(si===0&&act.length<8)?1:2;
+  if(!lunch[si].a1){lunch[si].a1=name;return true;}
+  if(!lunch[si].a2&&max>=2){lunch[si].a2=name;return true;}
+  return false;
+}
+
+function autoLunch(){
+  lunch=Array(6).fill(0).map(()=>({a1:'',a2:''}));
+  const act=active();
+  const unplaced=[];
+  // Pass 1: preference agents
+  act.forEach(a=>{
+    if(a.pref==='No preference'){unplaced.push(a);return;}
+    const si=LUNCH_LBL.indexOf(a.pref);
+    const order=[si];
+    for(let d=1;d<=5;d++){if(si+d<=5)order.push(si+d);if(si-d>=0)order.push(si-d);}
+    let placed=false;
+    for(const idx of order){if(tryPlace(idx,a.name)){placed=true;break;}}
+    if(!placed)unplaced.push(a);
+  });
+  // Pass 2: no-preference agents (original n%6 logic)
+  unplaced.forEach((a,n)=>{
+    const si=n%6;
+    if(!tryPlace(si,a.name)){
+      for(let i=0;i<6;i++){if(tryPlace(i,a.name))break;}
+    }
+  });
+  renderLunch();
+}
+
+function clearLunch(){
+  lunch=Array(6).fill(0).map(()=>({a1:'',a2:''}));
+  renderLunch();
+}
+
+// ── Gantt ─────────────────────────────────────────────────
+let ganttDragSrc=null;
+function renderGantt(){
+  ganttDragSrc=null;
+  const{total,ms}=buildCounts();
+  const act=active();
+  const tbl=document.getElementById('gantt-tbl');
+
+  let hdr=`<tr>
+    <th class="gh-hnd"></th>
+    <th class="gh-name">Agent</th>
+    <th class="gh-skill">Skill</th>`;
+  for(let s=0;s<SLOTS;s++)
+    hdr+=`<th style="width:22px;min-width:22px"><span class="gh-lbl">${toTime(BASE+s*10)}</span></th>`;
+  hdr+=`</tr>`;
+
+  const rows=agents.map((a,rowIdx)=>{
+    const isEmpty=!a.name.trim();
+    const actIdx=act.findIndex(aa=>aa.i===rowIdx);
+    let cells='';
+    for(let s=0;s<SLOTS;s++){
+      let bg='';
+      if(!isEmpty&&actIdx>=0){
+        // Lunch — skill colour, overridden by conflict
+        for(let si=0;si<6;si++){
+          for(const nm of[lunch[si].a1,lunch[si].a2]){
+            if(nm===a.name){
+              const dur=getDur(nm),st=(LUNCH_MINS[si]-BASE)/10;
+              if(s>=st&&s<st+dur/10){
+                if(ms[s]>=3)       bg='#fca5a5';
+                else if(total[s]>=3) bg='#fef08a';
+                else{
+                  const sk=getSkill(nm);
+                  const clrs=SKILL_LUNCH_CLR[sk]||SKILL_LUNCH_CLR['Multi Skill'];
+                  bg=dur<=30?clrs[1]:clrs[0];
+                }
+              }
+            }
+          }
+        }
+        // Breaks override lunch
+        if(actIdx<7&&s===actIdx) bg='#fb923c';
+        if(s===30+actIdx)        bg='#60a5fa';
+      }
+      cells+=`<td style="${bg?`background:${bg}`:''}">&nbsp;</td>`;
+    }
+    const bg2=rowIdx%2?'':'background:#f8fafc';
+    return`<tr draggable="true" data-ridx="${rowIdx}">
+      <td class="gcol-hnd" style="${bg2}"><span class="drag-handle">⠿</span></td>
+      <td class="gcol-name${isEmpty?' g-dim':''}" style="${bg2}">${isEmpty?`(row ${rowIdx+1} empty)`:a.name}</td>
+      <td class="gcol-skill" style="${bg2}">${isEmpty?'':skBdg(a.skill)}</td>
+      ${cells}</tr>`;
+  }).join('');
+
+  tbl.innerHTML=hdr+rows;
+
+  tbl.querySelectorAll('tr[draggable]').forEach(tr=>{
+    tr.addEventListener('dragstart',e=>{ganttDragSrc=tr;tr.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+    tr.addEventListener('dragend',()=>{tr.classList.remove('dragging');tbl.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over'));});
+    tr.addEventListener('dragover',e=>{e.preventDefault();tbl.querySelectorAll('tr').forEach(r=>r.classList.remove('drag-over'));if(tr!==ganttDragSrc)tr.classList.add('drag-over');});
+    tr.addEventListener('drop',e=>{
+      e.preventDefault();
+      if(!ganttDragSrc||ganttDragSrc===tr)return;
+      const from=+ganttDragSrc.dataset.ridx,to=+tr.dataset.ridx;
+      const moved=agents.splice(from,1)[0];
+      agents.splice(to,0,moved);
+      renderGantt();
+    });
+  });
+
+  // Conflict summary
+  const ms3=getWindows(ms,3);
+  const tot3=getWindows(total,3);
+  const ssC=[];
+  lunch.forEach((sl,si)=>{
+    if(sameSkill(si)){
+      const sk=getSkill(sl.a1);
+      ssC.push(`${LUNCH_LBL[si]} — ${sl.a1} &amp; ${sl.a2} <em>(${sk})</em>`);
+    }
+  });
+  // Missing agents
+  const assigned=new Set(lunch.flatMap(sl=>[sl.a1,sl.a2]).filter(Boolean));
+  const missing=active().filter(a=>!assigned.has(a.name));
+
+  let conf='';
+  if(ms3.length) conf+=`<div class="cbox cbox-err"><strong>🔴 3+ Multi Skill agents on lunch simultaneously:</strong>`+ms3.map(w=>`<div class="ci">→ ${toTime(w.from)} – ${toTime(w.to)}</div>`).join('')+`</div>`;
+  if(tot3.length) conf+=`<div class="cbox cbox-wrn"><strong>🟡 3+ agents on lunch simultaneously:</strong>`+tot3.map(w=>`<div class="ci">→ ${toTime(w.from)} – ${toTime(w.to)}</div>`).join('')+`</div>`;
+  if(ssC.length)  conf+=`<div class="cbox cbox-wrn"><strong>⚠ Same skill in same slot:</strong>`+ssC.map(c=>`<div class="ci">→ ${c}</div>`).join('')+`</div>`;
+  if(missing.length) conf+=`<div class="cbox cbox-inf"><strong>ℹ️ Not assigned to lunch:</strong>`+missing.map(a=>`<div class="ci">→ ${a.name} ${skBdg(a.skill)}</div>`).join('')+`</div>`;
+  if(!conf) conf=`<div class="cbox cbox-ok">✓ No conflicts detected.</div>`;
+  document.getElementById('gantt-conf').innerHTML=conf;
+}
+
+renderAgents();
+</script>
+</body>
+</html>
