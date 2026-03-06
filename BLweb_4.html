@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shift Desk</title>
+<title>Breaks &amp; Lunches - v2a</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -88,7 +88,7 @@ input::placeholder{color:var(--txm)}
 .tc{display:inline-flex;align-items:center;background:var(--sf2);border:1px solid var(--bd);border-radius:5px;font-family:'Courier New',monospace;font-size:12px;font-weight:700;padding:3px 9px;min-width:68px;justify-content:center}
 .tc.am{color:var(--amb)}
 .tc.pm{color:var(--grn)}
-.tc input[type=time]{background:transparent;border:none;box-shadow:none;color:inherit;font-family:inherit;font-size:inherit;font-weight:inherit;padding:0;width:56px}
+.tc input[type=time]{background:transparent;border:none;box-shadow:none;color:inherit;font-family:inherit;font-size:inherit;font-weight:inherit;padding:0;width:66px}
 .sc{display:inline-block;border-radius:4px;font-size:10px;font-weight:700;padding:2px 7px;text-transform:uppercase;letter-spacing:.04em}
 .sc.multi{background:var(--sm-bg);color:var(--purl)}
 .sc.single{background:var(--ss-bg);color:#88c2ff}
@@ -172,7 +172,7 @@ input::placeholder{color:var(--txm)}
 .g-bar{position:absolute;top:5px;bottom:5px;border-radius:3px;cursor:grab;display:flex;align-items:center;overflow:hidden;min-width:8px;z-index:2;transition:filter .1s}
 .g-bar:hover{filter:brightness(1.15)}
 .g-bar:active{cursor:grabbing}
-.g-bar.work{opacity:.2;cursor:default;pointer-events:none;z-index:1}
+.g-bar.work{opacity:.2;cursor:default;z-index:1}
 .g-bar.am-break{background:var(--amb);z-index:3}
 .g-bar.pm-break{background:var(--grn);z-index:3}
 .g-bar.lunch-bar{z-index:2}
@@ -193,13 +193,11 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--ac);cursor:pointe
 .sum-wrap{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:20px 24px;display:inline-block;min-width:320px}
 .sum-section-hdr{font-weight:800;font-size:13px;color:var(--tx);padding:0 0 6px;letter-spacing:.02em}
 .sum-tbl{border-collapse:collapse;margin-bottom:22px}
-.sum-tbl td{padding:4px 24px 4px 0;font-size:13px;vertical-align:middle;white-space:nowrap;color:var(--tx)}
+.sum-tbl td{padding:6px 18px;font-size:13px;vertical-align:middle;white-space:nowrap;color:var(--tx);border:1px solid var(--bd)}
 .sum-tbl td:first-child{font-weight:500}
 .sum-tbl td.sum-time{font-family:'Courier New',monospace;font-weight:700;color:var(--txd);min-width:64px}
 .sum-tbl td.sum-name{font-weight:500}
-.sum-tbl td.sum-name.skill-multi{color:var(--purl)}
-.sum-tbl td.sum-name.skill-single{color:#88c2ff}
-.sum-tbl td.sum-name.skill-partial{color:var(--orgl)}
+.sum-tbl td.sum-section-hdr{border:none;padding:12px 18px 4px 0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--txm)}
 .sum-tbl .sum-gap td{padding-top:10px}
 .sum-warn{display:inline-flex;align-items:center;gap:5px;border-radius:4px;font-size:11px;font-weight:600;padding:3px 9px;margin-left:8px}
 .sum-warn.red{background:var(--red-bg);color:var(--redl)}
@@ -211,7 +209,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--ac);cursor:pointe
 <nav class="nav">
   <div class="nav-logo">
     <div class="ic">⏱</div>
-    <span class="nm">SHIFT<em>.</em>DESK</span>
+    <span class="nm">BREAKS<em>.</em>LUNCHES <span style="color:var(--red);font-size:11px;letter-spacing:.04em">NOT FOR PROD</span></span>
   </div>
   <button class="tab-btn active" onclick="switchTab('setup',this)">① Setup</button>
   <button class="tab-btn" onclick="switchTab('breaks',this)">② Breaks</button>
@@ -426,7 +424,7 @@ function rdSetup(){
       </td>
       <td>
         <select onchange="S.agents[${i}].lockout=this.value">
-          <option value="">— None —</option>
+          <option value="">- None -</option>
           ${lockoutOptions.replace(`value="${a.lockout}"`,`value="${a.lockout}" selected`)}
         </select>
       </td>
@@ -480,10 +478,10 @@ function rdBreaks(){
     const sc=skClass(a.skill);
     const agentOpts=active_.map(ag=>`<option value="${ag.id}"${ag.id===r.agentId?' selected':''}>${esc(ag.name)}</option>`).join('');
     const amCell=a.noAm
-      ?`<td><span style="color:var(--txm);font-size:11px;font-style:italic;padding:0 9px">— removed —</span></td>`
+      ?`<td><span style="color:var(--txm);font-size:11px;font-style:italic;padding:0 9px">- removed -</span></td>`
       :`<td><span class="tc am"><input type="time" value="${m2t(r.amMin)}" onchange="S.breakRows[${i}].amMin=t2m(this.value);rdGantt&&rdGantt()"></span></td>`;
     const pmCell=a.noPm
-      ?`<td><span style="color:var(--txm);font-size:11px;font-style:italic;padding:0 9px">— removed —</span></td>`
+      ?`<td><span style="color:var(--txm);font-size:11px;font-style:italic;padding:0 9px">- removed -</span></td>`
       :`<td><span class="tc pm"><input type="time" value="${m2t(r.pmMin)}" onchange="S.breakRows[${i}].pmMin=t2m(this.value);rdGantt&&rdGantt()"></span></td>`;
     return`<tr class="drag-row" draggable="true"
       ondragstart="bDragStart(event,${i})"
@@ -516,6 +514,14 @@ function bDrop(e,i){
   if(bDragIdx===null||bDragIdx===i)return;
   const[removed]=S.breakRows.splice(bDragIdx,1);
   S.breakRows.splice(i,0,removed);
+  // Recalculate times sequentially based on new position
+  const amBase=t2m(S.settings.amStart);
+  const pmBase=t2m(S.settings.pmStart);
+  S.breakRows.forEach((r,idx)=>{
+    const a=getA(r.agentId);
+    if(!a||a.noAm) {/* keep existing if forced/removed */} else { r.amMin=amBase+idx*10; }
+    if(!a||a.noPm) {/* keep existing if forced/removed */} else { r.pmMin=pmBase+idx*10; }
+  });
   bDragIdx=null;rdBreaks();
 }
 
@@ -615,7 +621,7 @@ function rdLunches(){
         // Show add dropdown only for col 0 always, col 1 only if col 0 filled or we want flexibility
         const unassigned=active_.filter(a=>!S.lunches.flat().includes(a.id));
         if(unassigned.length>0){
-          html+=`<select class="lunch-add" onchange="addToSlot(${si},this.value);this.value=''">
+          html+=`<select class="lunch-add" onchange="addToSlot(${si},this.value,${col});this.value=''">
             <option value="">＋ assign…</option>
             ${unassigned.map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join('')}
           </select>`;
@@ -691,17 +697,25 @@ function lCellDrop(e,si,col){
 function removeLunch(si,row){
   S.lunches[si].splice(row,1);rdLunches();
 }
-function addToSlot(si,agentId){
+function addToSlot(si,agentId,col){
   // Remove from any existing slot
   S.lunches.forEach(agents=>{const i=agents.indexOf(agentId);if(i!==-1)agents.splice(i,1);});
-  if(S.lunches[si].length<2)S.lunches[si].push(agentId);
+  // Insert at the requested column position, padding col 0 with empty string if needed
+  if(col===1&&S.lunches[si].length===0){
+    S.lunches[si][0]=''; // hold col 0 empty
+    S.lunches[si][1]=agentId;
+  } else if(S.lunches[si].length<2){
+    S.lunches[si].splice(col,0,agentId);
+  } else {
+    S.lunches[si][col]=agentId;
+  }
   rdLunches();
 }
 
 // ═══════════════════════════════════════════════════
 // GANTT TAB
 // ═══════════════════════════════════════════════════
-function syncGanttOrder(){
+  function syncGanttOrder(){
   const active_=active();
   // Add new agents to end
   active_.forEach(a=>{if(!S.ganttOrder.includes(a.id))S.ganttOrder.push(a.id);});
@@ -766,7 +780,7 @@ function rdGantt(){
     // Bars
     const bars=[];
     // Work bar
-    bars.push(`<div class="g-bar work" style="left:${pctOf(t2m(a.start),range)};width:${wPct(t2m(a.end)-t2m(a.start),range)};background:${sc}" data-tip="Shift ${a.start}–${a.end}"></div>`);
+    bars.push(`<div class="g-bar work" style="left:${pctOf(t2m(a.start),range)};width:${wPct(t2m(a.end)-t2m(a.start),range)};background:${sc}"><div class="g-tip">Shift: ${a.start} - ${a.end}</div></div>`);
     // Grid lines
     const gridLines=ticks.map(m=>`<div class="g-grid-line" style="left:${pctOf(m,range)}"></div>`).join('');
 
@@ -774,12 +788,12 @@ function rdGantt(){
       if(!a.noAm)bars.push(`<div class="g-bar am-break" style="left:${pctOf(br.amMin,range)};width:${wPct(10,range)}"
         data-agent="${agentId}" data-type="am"
         onmousedown="barMD(event,'${agentId}','am',${br.amMin},10)">
-        <div class="g-tip">AM Break ${m2t(br.amMin)}</div>
+        <div class="g-tip">AM Break: ${m2t(br.amMin)} - ${m2t(br.amMin+10)}</div>
       </div>`);
       if(!a.noPm)bars.push(`<div class="g-bar pm-break" style="left:${pctOf(br.pmMin,range)};width:${wPct(10,range)}"
         data-agent="${agentId}" data-type="pm"
         onmousedown="barMD(event,'${agentId}','pm',${br.pmMin},10)">
-        <div class="g-tip">PM Break ${m2t(br.pmMin)}</div>
+        <div class="g-tip">PM Break: ${m2t(br.pmMin)} - ${m2t(br.pmMin+10)}</div>
       </div>`);
     }
     if(hasLunch){
@@ -791,7 +805,7 @@ function rdGantt(){
           onmousedown="barMD(event,'${agentId}','lunch',${lStart},${dur})">
           <span class="g-bar-lbl">${esc(a.name)}</span>
           <div class="g-resize" onmousedown="resMD(event,'${agentId}',${dur})"></div>
-          <div class="g-tip">Lunch ${m2t(lStart)} (${dur}min)${cfA?' ⚠':''}</div>
+          <div class="g-tip">Lunch: ${m2t(lStart)} - ${m2t(lStart+dur)}${cfA?' ⚠':''}</div>
         </div>`);
       }
     }
@@ -961,9 +975,9 @@ function rdConflictPanel(){
     const names=agents.map(a=>a.name).join(', ');
     if(cf==='red'){
       const multiNames=agents.filter(a=>a.skill==='multi').map(a=>a.name).join(', ');
-      items.push({cls:'cf-red-item',icon:'🔴',title:`${ts} — 3+ Multi-Skill agents on lunch`,detail:`Multi-skill agents on lunch simultaneously: ${multiNames}. This reduces team capability significantly.`});
+      items.push({cls:'cf-red-item',icon:'🔴',title:`${ts} - 3+ Multi-Skill agents on lunch`,detail:`Multi-skill agents on lunch simultaneously: ${multiNames}. This reduces team capability significantly.`});
     } else if(cf==='yel'){
-      items.push({cls:'cf-yel-item',icon:'🟡',title:`${ts} — 3+ agents on lunch at the same time`,detail:`Agents currently on lunch: ${names}. Consider spreading lunches to maintain coverage.`});
+      items.push({cls:'cf-yel-item',icon:'🟡',title:`${ts} - 3+ agents on lunch at the same time`,detail:`Agents currently on lunch: ${names}. Consider spreading lunches to maintain coverage.`});
     }
   }
 
@@ -981,7 +995,7 @@ function rdConflictPanel(){
 
   if(!items.length){
     el.innerHTML=`<div class="cf-panel"><div class="cf-panel-hdr">Conflicts &amp; Notices</div>
-      <div class="cf-panel-body"><div class="cf-none">No conflicts detected — schedule looks good.</div></div></div>`;
+      <div class="cf-panel-body"><div class="cf-none">No conflicts detected - schedule looks good.</div></div></div>`;
     return;
   }
 
@@ -1023,7 +1037,7 @@ function rdSummary(){
       ?`<td class="sum-time" style="color:var(--txm)">N/A</td>`
       :`<td class="sum-time">${m2t(r.pmMin)}</td>`;
     breaksRows+=`<tr>
-      <td class="sum-name skill-${sc}">${esc(a.name)}</td>
+      <td class="sum-name">${esc(a.name)}</td>
       ${amCell}${pmCell}
     </tr>`;
   });
@@ -1039,7 +1053,7 @@ function rdSummary(){
       if(a.lunchDur===0)return`<td class="sum-name" style="color:var(--txm)">N/A</td>`;
       const sc=skClass(a.skill);
       const durLabel=(a.lunchDur!==60)?` <span style="font-size:10px;opacity:.65;font-family:'Courier New',monospace">(${a.lunchDur} min)</span>`:'';
-      return`<td class="sum-name skill-${sc}">${esc(a.name)}${durLabel}</td>`;
+      return`<td class="sum-name">${esc(a.name)}${durLabel}</td>`;
     }).join('');
     lunchRows+=`<tr>
       <td class="sum-time">${slotTime(si)}</td>
@@ -1051,7 +1065,7 @@ function rdSummary(){
     <table class="sum-tbl">
       <tr><td colspan="3" class="sum-section-hdr">Breaks</td></tr>
       ${breaksRows}
-      <tr class="sum-gap"><td colspan="3" class="sum-section-hdr">Lunches</td></tr>
+      <tr><td colspan="3" class="sum-section-hdr" style="padding-top:16px">Lunches</td></tr>
       ${lunchRows}
     </table>
   </div>`;
