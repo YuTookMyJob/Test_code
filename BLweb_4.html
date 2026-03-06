@@ -168,23 +168,23 @@ input::placeholder{color:var(--txm)}
 .g-agent.dragging{outline:2px solid var(--pur);border-radius:4px;opacity:.5}
 .g-agent-name{font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
 .g-track{flex:1;height:100%;position:relative;background:var(--sf);border:1px solid var(--bd);border-radius:5px;overflow:visible}
-.g-grid-line{position:absolute;top:0;bottom:0;width:1px;background:var(--bd);opacity:.3;pointer-events:none}
+.g-grid-line{position:absolute;top:0;bottom:0;width:1px;background:var(--bd);opacity:.8;pointer-events:none}
+.g-grid-line.minor{opacity:.3}
 .g-bar{position:absolute;top:5px;bottom:5px;border-radius:3px;cursor:grab;display:flex;align-items:center;overflow:hidden;min-width:8px;z-index:2;transition:filter .1s}
 .g-bar:hover{filter:brightness(1.15)}
 .g-bar:active{cursor:grabbing}
 .g-bar.work{opacity:.2;cursor:default;z-index:1}
 .g-bar.am-break{background:var(--amb);z-index:3}
-.g-bar.pm-break{background:var(--grn);z-index:3}
+.g-bar.pm-break{background:var(--amb);z-index:3}
 .g-bar.lunch-bar{z-index:2}
 .g-bar.lunch-bar.cf-red{box-shadow:0 0 0 2px var(--redl);}
 .g-bar.lunch-bar.cf-yel{box-shadow:0 0 0 2px var(--yel);}
 .g-bar.lunch-bar.cf-org{box-shadow:0 0 0 2px var(--orgl);}
-.g-bar-lbl{font-size:10px;font-weight:600;color:rgba(255,255,255,.8);padding:0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;flex:1}
+.g-bar-lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.9);padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;flex:1}
+.g-bar-times{font-size:9px;font-weight:600;color:rgba(255,255,255,.65);font-family:'Courier New',monospace;padding:0 6px 0 0;white-space:nowrap;pointer-events:none;flex-shrink:0}
 .g-resize{position:absolute;right:0;top:0;bottom:0;width:7px;cursor:ew-resize;background:rgba(255,255,255,.12);border-radius:0 3px 3px 0;flex-shrink:0;z-index:4}
 .g-resize:hover{background:rgba(255,255,255,.35)}
 .g-no-lunch{border:1px dashed rgba(229,83,75,.35)!important}
-.g-tip{position:absolute;background:#1c2128;border:1px solid var(--bd2);border-radius:6px;color:var(--tx);font-size:11px;padding:5px 9px;pointer-events:none;z-index:999;white-space:nowrap;top:-32px;left:50%;transform:translateX(-50%);display:none}
-.g-bar:hover .g-tip{display:block}
 .setup-tbl th:nth-last-child(-n+2){text-align:center;width:52px}
 input[type=checkbox]{width:16px;height:16px;accent-color:var(--ac);cursor:pointer}
 .empty-state{text-align:center;padding:60px 20px;color:var(--txm)}
@@ -209,7 +209,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--ac);cursor:pointe
 <nav class="nav">
   <div class="nav-logo">
     <div class="ic">⏱</div>
-    <span class="nm">BREAKS<em>.</em>LUNCHES <span style="color:var(--red);font-size:11px;letter-spacing:.04em">NOT FOR PROD</span></span>
+    <span class="nm">BREAKS<em>.</em>LUNCHES<span style="color:var(--red);font-size:8px;letter-spacing:.04em;vertical-align:middle;margin-left:6px">- NOT FOR PROD</span></span>
   </div>
   <button class="tab-btn active" onclick="switchTab('setup',this)">① Setup</button>
   <button class="tab-btn" onclick="switchTab('breaks',this)">② Breaks</button>
@@ -231,6 +231,9 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--ac);cursor:pointe
         <div class="fld"><span class="fld-lbl">PM Break Start</span><input type="time" id="s-pmStart" value="15:00" onchange="saveSettings()"></div>
         <div class="fld"><span class="fld-lbl">PM Break End</span><input type="time" id="s-pmEnd" value="16:10" onchange="saveSettings()"></div>
         <div class="fld"><span class="fld-lbl">Lunch Starts</span><input type="time" id="s-lunchStart" value="11:30" onchange="saveSettings()"></div>
+        <div class="fld"><span class="fld-lbl">Lunch Ends</span><input type="time" id="s-lunchEnd" value="14:00" onchange="saveSettings()"></div>
+        <div class="fld"><span class="fld-lbl">Lunch Slots</span><input type="number" id="s-lunchSlots" value="6" min="1" max="20" style="width:56px" onchange="saveSettings()"></div>
+        <div class="fld"><span class="fld-lbl">Gap (mins)</span><input type="number" id="s-lunchGap" value="30" min="5" max="60" step="5" style="width:56px" onchange="saveSettings()"></div>
       </div>
     </div>
   </div>
@@ -290,8 +293,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:var(--ac);cursor:pointe
     <div class="leg"><div class="leg-sw" style="background:var(--sm);opacity:.7"></div>Multi-skill</div>
     <div class="leg"><div class="leg-sw" style="background:var(--ss);opacity:.7"></div>Single-skill</div>
     <div class="leg"><div class="leg-sw" style="background:var(--sp);opacity:.7"></div>Partial Multi</div>
-    <div class="leg"><div class="leg-sw" style="background:var(--amb)"></div>AM Break</div>
-    <div class="leg"><div class="leg-sw" style="background:var(--grn)"></div>PM Break</div>
+    <div class="leg"><div class="leg-sw" style="background:var(--amb)"></div>AM/PM Break</div>
     <div class="leg"><div class="leg-sw" style="background:var(--txd)"></div>Lunch</div>
     <div class="leg"><div class="leg-sw" style="background:var(--redl)"></div>Conflict (red)</div>
     <div class="leg"><div class="leg-sw" style="background:var(--yel)"></div>Conflict (yellow)</div>
@@ -310,10 +312,10 @@ const S = {
   agents: Array.from({length:12},(_,i)=>({
     id:String(i),name:'',skill:'multi',start:'09:00',end:'17:00',lunchDur:60,lockout:'',noAm:false,noPm:false
   })),
-  settings:{amStart:'10:00',amEnd:'11:10',pmStart:'15:00',pmEnd:'16:10',lunchStart:'11:30'},
+  settings:{amStart:'10:00',amEnd:'11:10',pmStart:'15:00',pmEnd:'16:10',lunchStart:'11:30',lunchEnd:'14:00',lunchSlots:6,lunchGap:30},
   breakRows:[], // [{agentId,amMin,pmMin}]
-  lunches:Array.from({length:7},()=>[]), // slot index -> [agentId,...]
-  ganttOrder:[] // [agentId,...] for gantt row order
+  lunches:Array.from({length:6},()=>[]),
+  ganttOrder:[]
 };
 
 // ═══════════════════════════════════════════════════
@@ -327,8 +329,8 @@ const getA=id=>S.agents.find(a=>a.id===id);
 const skColor=s=>s==='multi'?'var(--sm)':s==='partial'?'var(--sp)':'var(--ss)';
 const skClass=s=>s==='multi'?'multi':s==='partial'?'partial':'single';
 const skLabel=s=>s==='multi'?'Multi':s==='partial'?'Partial':'Single';
-const slotTime=i=>m2t(t2m(S.settings.lunchStart)+i*30);
-const SLOT_COUNT=7;
+const slotTime=i=>m2t(t2m(S.settings.lunchStart)+i*(S.settings.lunchGap||30));
+const slotCount=()=>S.settings.lunchSlots||6;
 
 // ═══════════════════════════════════════════════════
 // CONFLICT DETECTION
@@ -336,7 +338,7 @@ const SLOT_COUNT=7;
 function agentsOnLunchAt(minute){
   const res=[];
   S.lunches.forEach((agents,si)=>{
-    const ss=t2m(S.settings.lunchStart)+si*30;
+    const ss=t2m(S.settings.lunchStart)+si*(S.settings.lunchGap||30);
     agents.forEach(id=>{
       if(!id)return;
       const a=getA(id);if(!a||!a.name)return;
@@ -355,7 +357,7 @@ function conflictLevel(agents){
 }
 
 function slotConflict(si){
-  const ss=t2m(S.settings.lunchStart)+si*30;
+  const ss=t2m(S.settings.lunchStart)+si*(S.settings.lunchGap||30);
   const agents=agentsOnLunchAt(ss);
   return conflictLevel(agents);
 }
@@ -363,7 +365,7 @@ function slotConflict(si){
 function agentConflict(agentId){
   let startMin=null;
   S.lunches.forEach((agents,si)=>{
-    if(agents.includes(agentId))startMin=t2m(S.settings.lunchStart)+si*30;
+    if(agents.includes(agentId))startMin=t2m(S.settings.lunchStart)+si*(S.settings.lunchGap||30);
   });
   if(startMin===null)return null;
   return conflictLevel(agentsOnLunchAt(startMin));
@@ -371,12 +373,12 @@ function agentConflict(agentId){
 
 function duplicates(){
   const seen={},dups=new Set();
-  S.lunches.forEach(agents=>agents.forEach(id=>{if(!id)return;if(seen[id])dups.add(id);seen[id]=true;}));
+  S.lunches.forEach(agents=>agents.forEach(id=>{if(!id||id==='')return;if(seen[id])dups.add(id);seen[id]=true;}));
   return dups;
 }
 
 function missingFromLunch(){
-  const assigned=new Set(S.lunches.flat().filter(Boolean));
+  const assigned=new Set(S.lunches.flat().filter(id=>id&&id!==''));
   return active().filter(a=>!assigned.has(a.id));
 }
 
@@ -397,10 +399,16 @@ function saveSettings(){
   S.settings.pmStart=document.getElementById('s-pmStart').value;
   S.settings.pmEnd=document.getElementById('s-pmEnd').value;
   S.settings.lunchStart=document.getElementById('s-lunchStart').value;
+  S.settings.lunchEnd=document.getElementById('s-lunchEnd').value;
+  S.settings.lunchSlots=parseInt(document.getElementById('s-lunchSlots').value)||6;
+  S.settings.lunchGap=parseInt(document.getElementById('s-lunchGap').value)||30;
+  // Resize lunches array if slot count changed
+  while(S.lunches.length<S.settings.lunchSlots)S.lunches.push([]);
+  S.lunches=S.lunches.slice(0,S.settings.lunchSlots);
 }
 
 function rdSetup(){
-  const lockoutOptions=Array.from({length:SLOT_COUNT},(_,i)=>`<option value="${i}"${''}>  ${slotTime(i)}</option>`).join('');
+  const lockoutOptions=Array.from({length:slotCount()},(_,i)=>`<option value="${i}"${''}>  ${slotTime(i)}</option>`).join('');
   document.getElementById('setup-body').innerHTML=S.agents.map((a,i)=>`
     <tr>
       <td><span class="row-num">${i+1}</span></td>
@@ -528,10 +536,10 @@ function bDrop(e,i){
 // ═══════════════════════════════════════════════════
 // LUNCHES TAB
 // ═══════════════════════════════════════════════════
-function clearLunches(){S.lunches=Array.from({length:SLOT_COUNT},()=>[]);rdLunches();}
+function clearLunches(){S.lunches=Array.from({length:slotCount()},()=>[]);rdLunches();}
 
 function autoAssign(){
-  S.lunches=Array.from({length:SLOT_COUNT},()=>[]);
+  S.lunches=Array.from({length:slotCount()},()=>[]);
   const ags=active();const n=ags.length;
   const locked=ags.filter(a=>a.lockout!=='');
   const unlocked=ags.filter(a=>a.lockout==='');
@@ -539,7 +547,7 @@ function autoAssign(){
   // Place locked first
   locked.forEach(a=>{
     const si=parseInt(a.lockout);
-    if(isNaN(si)||si<0||si>=SLOT_COUNT)return;
+    if(isNaN(si)||si<0||si>=slotCount())return;
     const max=(si===0&&n<=8)?1:2;
     if(S.lunches[si].length<max)S.lunches[si].push(a.id);
   });
@@ -549,7 +557,7 @@ function autoAssign(){
 
   sorted.forEach(a=>{
     let placed=false;
-    for(let si=0;si<SLOT_COUNT;si++){
+    for(let si=0;si<slotCount();si++){
       const max=(si===0&&n<=8)?1:2;
       if(S.lunches[si].length<max){
         S.lunches[si].push(a.id);placed=true;break;
@@ -557,7 +565,7 @@ function autoAssign(){
     }
     if(!placed){
       // Try again with full capacity
-      for(let si=0;si<SLOT_COUNT;si++){
+      for(let si=0;si<slotCount();si++){
         if(S.lunches[si].length<2){S.lunches[si].push(a.id);break;}
       }
     }
@@ -581,7 +589,7 @@ function rdLunches(){
     <th>Time</th><th>Agent 1</th><th>Agent 2</th>
   </tr></thead><tbody>`;
 
-  for(let si=0;si<SLOT_COUNT;si++){
+  for(let si=0;si<slotCount();si++){
     const cf=slotConflict(si);
     let rowCls='';
     if(cf==='red')rowCls='cf-red-row';
@@ -610,10 +618,10 @@ function rdLunches(){
           else if(cfA==='org')border='outline:1px solid var(--orgl);';
           html+=`<div class="lpill skill-${a.skill}" style="${border}" draggable="true"
             id="lpill-${agentId}"
-            ondragstart="lPillDS(event,'${agentId}',${si})"
+            ondragstart="lPillDS(event,'${agentId}',${si},${col})"
             ondragend="lPillDE(event,'${agentId}')">
             <span class="lpill-name">${esc(a.name)}</span>
-            ${nonDef?`<span class="lpill-dur">(${a.lunchDur} min)</span>`:''}
+            ${nonDef?`<span class="lpill-dur">(${a.lunchDur} mins)</span>`:''}
             <button class="lpill-rm" onclick="removeLunch(${si},${col});event.stopPropagation()">×</button>
           </div>`;
         }
@@ -640,7 +648,7 @@ function rdLunches(){
   const miss=missingFromLunch();
   if(dups.size>0)warns.push({t:'err',msg:`⚠ Duplicate agents: ${[...dups].map(id=>esc(getA(id)?.name||'?')).join(', ')}`});
   if(miss.length>0)warns.push({t:'wrn',msg:`⚠ Missing from lunch: ${miss.map(a=>esc(a.name)).join(', ')}`});
-  for(let si=0;si<SLOT_COUNT;si++){
+  for(let si=0;si<slotCount();si++){
     const cf=slotConflict(si);
     if(cf==='red')warns.push({t:'err',msg:`🔴 ${slotTime(si)}: 3+ multi-skill agents on lunch`});
     else if(cf==='yel')warns.push({t:'wrn',msg:`🟡 ${slotTime(si)}: 3+ agents on lunch simultaneously`});
@@ -648,8 +656,8 @@ function rdLunches(){
   document.getElementById('lunch-warns').innerHTML=warns.map(w=>`<div class="warn-tag ${w.t}">${w.msg}</div>`).join('');
 }
 
-function lPillDS(e,agentId,fromSi){
-  lDrag={agentId,fromSi};
+function lPillDS(e,agentId,fromSi,fromCol){
+  lDrag={agentId,fromSi,fromCol};
   setTimeout(()=>{const p=document.getElementById('lpill-'+agentId);if(p)p.classList.add('dragging');},0);
   e.dataTransfer.effectAllowed='move';
 }
@@ -671,26 +679,26 @@ function lCellDrop(e,si,col){
   const td=document.getElementById(`lcd-${si}-${col}`);
   if(td)td.classList.remove('drop-active');
   if(!lDrag)return;
-  const{agentId,fromSi}=lDrag;
-  const n=active().length;
-  const max=(si===0&&n<=8)?1:2;
-  // Get existing occupant
-  const existing=S.lunches[si][col];
-  // Remove agent from source
-  const sIdx=S.lunches[fromSi].indexOf(agentId);
-  if(sIdx!==-1)S.lunches[fromSi].splice(sIdx,1);
-  // If target cell occupied, swap
+  const{agentId,fromSi,fromCol}=lDrag;
+  if(fromSi===si&&fromCol===col){lDrag=null;return;}
+
+  // Snapshot existing occupant at target
+  const existing=S.lunches[si]?S.lunches[si][col]||'':'';
+
+  // Ensure arrays are long enough
+  while(S.lunches[si].length<=col)S.lunches[si].push('');
+  while(S.lunches[fromSi].length<=fromCol)S.lunches[fromSi].push('');
+
+  // Place dragged agent at exact target position
+  S.lunches[si][col]=agentId;
+
+  // Put displaced agent (if any) back at source position
   if(existing&&existing!==agentId){
-    if(S.lunches[fromSi].length<2)S.lunches[fromSi].push(existing);
-    const eIdx=S.lunches[si].indexOf(existing);
-    if(eIdx!==-1)S.lunches[si].splice(eIdx,1);
-  }
-  // Place in target
-  if(S.lunches[si].length<max){
-    S.lunches[si].splice(col,0,agentId);
+    S.lunches[fromSi][fromCol]=existing;
   } else {
-    S.lunches[si][col]=agentId;
+    S.lunches[fromSi][fromCol]='';
   }
+
   lDrag=null;rdLunches();
 }
 
@@ -715,7 +723,7 @@ function addToSlot(si,agentId,col){
 // ═══════════════════════════════════════════════════
 // GANTT TAB
 // ═══════════════════════════════════════════════════
-  function syncGanttOrder(){
+function syncGanttOrder(){
   const active_=active();
   // Add new agents to end
   active_.forEach(a=>{if(!S.ganttOrder.includes(a.id))S.ganttOrder.push(a.id);});
@@ -779,33 +787,38 @@ function rdGantt(){
 
     // Bars
     const bars=[];
-    // Work bar
-    bars.push(`<div class="g-bar work" style="left:${pctOf(t2m(a.start),range)};width:${wPct(t2m(a.end)-t2m(a.start),range)};background:${sc}"><div class="g-tip">Shift: ${a.start} - ${a.end}</div></div>`);
-    // Grid lines
-    const gridLines=ticks.map(m=>`<div class="g-grid-line" style="left:${pctOf(m,range)}"></div>`).join('');
+    // Work bar with start/end labels
+    bars.push(`<div class="g-bar work" style="left:${pctOf(t2m(a.start),range)};width:${wPct(t2m(a.end)-t2m(a.start),range)};background:${sc}">
+      <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,.7);font-family:'Courier New',monospace;padding:0 4px;pointer-events:none;flex-shrink:0">${a.start}</span>
+      <span style="flex:1"></span>
+      <span style="font-size:9px;font-weight:700;color:rgba(255,255,255,.7);font-family:'Courier New',monospace;padding:0 4px;pointer-events:none;flex-shrink:0">${a.end}</span>
+    </div>`);
+    // Grid lines - hour + 10-minute minor ticks
+    const minorTicks=[];
+    for(let m=range.min;m<=range.max;m+=10){
+      const isHour=m%60===0;
+      minorTicks.push(`<div class="g-grid-line${isHour?'':' minor'}" style="left:${pctOf(m,range)}"></div>`);
+    }
+    const gridLines=minorTicks.join('');
 
     if(br){
       if(!a.noAm)bars.push(`<div class="g-bar am-break" style="left:${pctOf(br.amMin,range)};width:${wPct(10,range)}"
         data-agent="${agentId}" data-type="am"
-        onmousedown="barMD(event,'${agentId}','am',${br.amMin},10)">
-        <div class="g-tip">AM Break: ${m2t(br.amMin)} - ${m2t(br.amMin+10)}</div>
-      </div>`);
+        onmousedown="barMD(event,'${agentId}','am',${br.amMin},10)"></div>`);
       if(!a.noPm)bars.push(`<div class="g-bar pm-break" style="left:${pctOf(br.pmMin,range)};width:${wPct(10,range)}"
         data-agent="${agentId}" data-type="pm"
-        onmousedown="barMD(event,'${agentId}','pm',${br.pmMin},10)">
-        <div class="g-tip">PM Break: ${m2t(br.pmMin)} - ${m2t(br.pmMin+10)}</div>
-      </div>`);
+        onmousedown="barMD(event,'${agentId}','pm',${br.pmMin},10)"></div>`);
     }
     if(hasLunch){
-      const lStart=t2m(S.settings.lunchStart)+lunchSi*30;
+      const lStart=t2m(S.settings.lunchStart)+lunchSi*(S.settings.lunchGap||30);
       const dur=a.lunchDur||60;
       if(dur>0){
         bars.push(`<div class="g-bar lunch-bar ${cfClass}" style="left:${pctOf(lStart,range)};width:${wPct(dur,range)};background:${sc}"
           data-agent="${agentId}" data-type="lunch"
           onmousedown="barMD(event,'${agentId}','lunch',${lStart},${dur})">
           <span class="g-bar-lbl">${esc(a.name)}</span>
+          <span class="g-bar-times">${m2t(lStart)}-${m2t(lStart+dur)}</span>
           <div class="g-resize" onmousedown="resMD(event,'${agentId}',${dur})"></div>
-          <div class="g-tip">Lunch: ${m2t(lStart)} - ${m2t(lStart+dur)}${cfA?' ⚠':''}</div>
         </div>`);
       }
     }
@@ -928,11 +941,26 @@ function onBarUp(e){
         const row=S.breakRows.find(r=>r.agentId===gDrag.agentId);
         if(row)row.pmMin=newMin;
       } else if(gDrag.type==='lunch'){
+        const gap=S.settings.lunchGap||30;
         const lunchBase=t2m(S.settings.lunchStart);
-        const slotIdx=Math.round((newMin-lunchBase)/30);
-        const clamped=Math.max(0,Math.min(SLOT_COUNT-1,slotIdx));
-        S.lunches.forEach(agents=>{const i=agents.indexOf(gDrag.agentId);if(i!==-1)agents.splice(i,1);});
-        if(S.lunches[clamped].length<2)S.lunches[clamped].push(gDrag.agentId);
+        const slotIdx=Math.round((newMin-lunchBase)/gap);
+        const clamped=Math.max(0,Math.min(slotCount()-1,slotIdx));
+        // Find current position
+        let fromSi=-1,fromCol=-1;
+        S.lunches.forEach((agents,si)=>{
+          agents.forEach((id,col)=>{if(id===gDrag.agentId){fromSi=si;fromCol=col;}});
+        });
+        if(fromSi===-1)return; // not found, abort
+        if(fromSi===clamped)return; // same slot, no move needed
+        // Check capacity at target slot
+        const targetSlot=S.lunches[clamped]||[];
+        const emptyCol=targetSlot.findIndex((id,col)=>!id||id==='');
+        const targetCol=emptyCol!==-1?emptyCol:targetSlot.length<2?targetSlot.length:fromCol;
+        if(targetSlot.length>=2&&emptyCol===-1)return; // full slot, abort
+        // Move: clear source, set target
+        while(S.lunches[clamped].length<=targetCol)S.lunches[clamped].push('');
+        S.lunches[clamped][targetCol]=gDrag.agentId;
+        S.lunches[fromSi][fromCol]='';
       }
     } else if(gDrag.mode==='resize'){
       const newDur=Math.max(15,gDrag.dur+dMin);
@@ -967,11 +995,11 @@ function rdConflictPanel(){
   const active_=active();
 
   // Per-slot conflicts
-  for(let si=0;si<SLOT_COUNT;si++){
+  for(let si=0;si<slotCount();si++){
     const cf=slotConflict(si);
     if(!cf)continue;
     const ts=slotTime(si);
-    const agents=agentsOnLunchAt(t2m(S.settings.lunchStart)+si*30);
+    const agents=agentsOnLunchAt(t2m(S.settings.lunchStart)+si*(S.settings.lunchGap||30));
     const names=agents.map(a=>a.name).join(', ');
     if(cf==='red'){
       const multiNames=agents.filter(a=>a.skill==='multi').map(a=>a.name).join(', ');
@@ -1044,7 +1072,7 @@ function rdSummary(){
 
   // ── Lunches section ──
   let lunchRows='';
-  for(let si=0;si<SLOT_COUNT;si++){
+  for(let si=0;si<slotCount();si++){
     const agents=S.lunches[si];
     const cells=[0,1].map(col=>{
       const id=agents[col];
@@ -1052,7 +1080,7 @@ function rdSummary(){
       const a=getA(id);if(!a||!a.name)return`<td class="sum-name"></td>`;
       if(a.lunchDur===0)return`<td class="sum-name" style="color:var(--txm)">N/A</td>`;
       const sc=skClass(a.skill);
-      const durLabel=(a.lunchDur!==60)?` <span style="font-size:10px;opacity:.65;font-family:'Courier New',monospace">(${a.lunchDur} min)</span>`:'';
+      const durLabel=(a.lunchDur!==60)?` <span style="font-size:10px;opacity:.65;font-family:'Courier New',monospace">(${a.lunchDur} mins)</span>`:'';
       return`<td class="sum-name">${esc(a.name)}${durLabel}</td>`;
     }).join('');
     lunchRows+=`<tr>
@@ -1085,13 +1113,13 @@ function copySummary(){
   });
   lines.push('');
   lines.push('Lunches');
-  for(let si=0;si<SLOT_COUNT;si++){
+  for(let si=0;si<slotCount();si++){
     const t=slotTime(si);
     const ag=S.lunches[si];
     const n1=ag[0]?getA(ag[0])?.name||'':'';
     const n2=ag[1]?getA(ag[1])?.name||'':'';
-    const d1=ag[0]&&getA(ag[0])?.lunchDur!==60?` (${getA(ag[0]).lunchDur} min)`:'';
-    const d2=ag[1]&&getA(ag[1])?.lunchDur!==60?` (${getA(ag[1]).lunchDur} min)`:'';
+    const d1=ag[0]&&getA(ag[0])?.lunchDur!==60?` (${getA(ag[0]).lunchDur} mins)`:'';
+    const d2=ag[1]&&getA(ag[1])?.lunchDur!==60?` (${getA(ag[1]).lunchDur} mins)`:'';
     lines.push(`${t}\t${n1+d1}\t${n2+d2}`);
   }
   navigator.clipboard.writeText(lines.join('\n')).then(()=>{
